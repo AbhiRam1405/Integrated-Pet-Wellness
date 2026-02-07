@@ -34,3 +34,8 @@ target/
 *.sql
 *.sqlite
 .DS_Store
+
+### Maven Wrapper ###
+# Keep wrapper jar and properties for portable builds
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
