@@ -169,6 +169,11 @@ IF NOT %WRAPPER_SHA_256_SUM%=="" (
 @REM work with both Windows and non-Windows executions.
 set MAVEN_CMD_LINE_ARGS=%*
 
+@REM Set the Java executable
+if not "%MAVEN_JAVA_EXE%" == "" goto runMaven
+set MAVEN_JAVA_EXE="%JAVA_HOME%\bin\java.exe"
+
+:runMaven
 %MAVEN_JAVA_EXE% ^
   %JVM_CONFIG_MAVEN_PROPS% ^
   %MAVEN_OPTS% ^
