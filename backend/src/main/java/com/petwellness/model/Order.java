@@ -34,7 +34,7 @@ public class Order {
 
     private OrderStatus status;
 
-    private String deliveryAddress;
+    private String shippingAddress;
 
     private String phoneNumber;
 

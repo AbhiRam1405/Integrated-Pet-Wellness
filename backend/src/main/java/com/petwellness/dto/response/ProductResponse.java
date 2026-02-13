@@ -21,7 +21,7 @@ public class ProductResponse {
     private String name;
     private String description;
     private Double price;
-    private Integer stock;
+    private Integer stockQuantity;
     private ProductCategory category;
     private String imageUrl;
     private LocalDateTime createdAt;

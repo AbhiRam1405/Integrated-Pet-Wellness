@@ -1,0 +1,117 @@
+{
+    "info": {
+        "name": "Pet Wellness - Profile Management",
+        "description": "API collection for user profile management including view, update, and password change",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1. Get User Profile",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}",
+                        "type": "text"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/users/profile",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "users",
+                        "profile"
+                    ]
+                },
+                "description": "Get the current logged-in user's profile. Automatically extracts user from JWT token."
+            },
+            "response": []
+        },
+        {
+            "name": "2. Update Profile",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"phoneNumber\": \"+1234567890\",\n  \"address\": \"456 Oak Avenue, Springfield, IL 62701\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/users/profile",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "users",
+                        "profile"
+                    ]
+                },
+                "description": "Update user profile. Only firstName, lastName, phoneNumber, and address can be updated. Email, role, and password cannot be changed via this endpoint."
+            },
+            "response": []
+        },
+        {
+            "name": "3. Change Password",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    {
+                        "key": "Authorization",
+                        "value": "Bearer {{jwt_token}}",
+                        "type": "text"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"oldPassword\": \"currentPassword123\",\n  \"newPassword\": \"newSecurePassword456\"\n}"
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/users/change-password",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "users",
+                        "change-password"
+                    ]
+                },
+                "description": "Change password for the current user. Validates old password before updating. New password must be at least 6 characters."
+            },
+            "response": []
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "jwt_token",
+            "value": "your_jwt_token_here",
+            "type": "string"
+        }
+    ]
+}

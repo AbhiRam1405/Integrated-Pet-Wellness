@@ -31,7 +31,7 @@ public class CreateProductRequest {
 
     @NotNull(message = "Stock is required")
     @PositiveOrZero(message = "Stock cannot be negative")
-    private Integer stock;
+    private Integer stockQuantity;
 
     @NotNull(message = "Category is required")
     private ProductCategory category;

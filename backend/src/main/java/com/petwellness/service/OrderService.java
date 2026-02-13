@@ -46,7 +46,7 @@ public class OrderService {
             Product product = productRepository.findById(item.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + item.getProductName()));
             
-            if (product.getStock() < item.getQuantity()) {
+            if (product.getStockQuantity() < item.getQuantity()) {
                 throw new RuntimeException("Insufficient stock for product: " + product.getName());
             }
             
@@ -59,7 +59,7 @@ public class OrderService {
                 .orderDate(LocalDateTime.now())
                 .totalAmount(totalAmount)
                 .status(OrderStatus.PENDING)
-                .deliveryAddress(request.getDeliveryAddress())
+                .shippingAddress(request.getShippingAddress())
                 .phoneNumber(request.getPhoneNumber())
                 .build();
 
@@ -80,7 +80,7 @@ public class OrderService {
             orderItemRepository.save(orderItem);
 
             // Deduct Stock
-            product.setStock(product.getStock() - item.getQuantity());
+            product.setStockQuantity(product.getStockQuantity() - item.getQuantity());
             productRepository.save(product);
         }
 
@@ -147,7 +147,7 @@ public class OrderService {
         List<OrderItem> items = orderItemRepository.findByOrderId(id);
         for (OrderItem item : items) {
             productRepository.findById(item.getProductId()).ifPresent(product -> {
-                product.setStock(product.getStock() + item.getQuantity());
+                product.setStockQuantity(product.getStockQuantity() + item.getQuantity());
                 productRepository.save(product);
             });
         }
@@ -177,7 +177,7 @@ public class OrderService {
                         .productId(item.getProductId())
                         .productName(item.getProductName())
                         .quantity(item.getQuantity())
-                        .priceAtPurchase(item.getPriceAtPurchase())
+                        .price(item.getPriceAtPurchase())
                         .subtotal(item.getSubtotal())
                         .build())
                 .collect(Collectors.toList());
@@ -188,7 +188,7 @@ public class OrderService {
                 .orderDate(order.getOrderDate())
                 .totalAmount(order.getTotalAmount())
                 .status(order.getStatus())
-                .deliveryAddress(order.getDeliveryAddress())
+                .shippingAddress(order.getShippingAddress())
                 .phoneNumber(order.getPhoneNumber())
                 .items(itemResponses)
                 .createdAt(order.getCreatedAt())

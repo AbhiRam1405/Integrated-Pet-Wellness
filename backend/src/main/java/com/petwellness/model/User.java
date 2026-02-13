@@ -50,6 +50,12 @@ public class User {
     
     private String address;
     
+    private String profileImageUrl; // Optional profile image URL
+    
+    private String otp; // 6-digit OTP for email verification
+    
+    private LocalDateTime otpExpiry; // OTP expiration time
+    
     @CreatedDate
     private LocalDateTime createdAt;
     

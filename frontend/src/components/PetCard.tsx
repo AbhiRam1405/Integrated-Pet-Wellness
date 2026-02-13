@@ -1,6 +1,6 @@
 import { PetType, type PetResponse } from '../types/pet';
 import { Button } from './Button';
-import { Calendar, Dna, Info, Trash2 } from 'lucide-react';
+import { Calendar, Dna, Info, Trash2, Edit2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface PetCardProps {
@@ -24,6 +24,15 @@ export function PetCard({ pet, onDelete }: PetCardProps) {
                     {typeIcons[pet.type] || '🐾'}
                 </div>
                 <div className="flex space-x-2">
+                    <Link to={`/pets/edit/${pet.id}`}>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-slate-400 hover:text-indigo-600"
+                        >
+                            <Edit2 size={18} />
+                        </Button>
+                    </Link>
                     <Button
                         variant="ghost"
                         size="sm"

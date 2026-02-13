@@ -27,11 +27,12 @@ public class CartController {
     private final UserRepository userRepository;
 
     @PostMapping("/add")
-    public ResponseEntity<CartItemResponse> addToCart(
+    public ResponseEntity<CartResponse> addToCart(
             Authentication authentication,
             @Valid @RequestBody AddToCartRequest request) {
         String userId = getUserId(authentication);
-        return ResponseEntity.ok(cartService.addToCart(request, userId));
+        cartService.addToCart(request, userId);
+        return ResponseEntity.ok(cartService.getMyCart(userId));
     }
 
     @GetMapping
@@ -41,7 +42,7 @@ public class CartController {
     }
 
     @PutMapping("/update/{itemId}")
-    public ResponseEntity<CartItemResponse> updateQuantity(
+    public ResponseEntity<CartResponse> updateQuantity(
             @PathVariable String itemId,
             Authentication authentication,
             @Valid @RequestBody UpdateCartItemRequest request) {
@@ -50,12 +51,11 @@ public class CartController {
     }
 
     @DeleteMapping("/remove/{itemId}")
-    public ResponseEntity<MessageResponse> removeItem(
+    public ResponseEntity<CartResponse> removeItem(
             @PathVariable String itemId,
             Authentication authentication) {
         String userId = getUserId(authentication);
-        cartService.removeItem(itemId, userId);
-        return ResponseEntity.ok(new MessageResponse("Item removed from cart", true));
+        return ResponseEntity.ok(cartService.removeItem(itemId, userId));
     }
 
     @DeleteMapping("/clear")

@@ -3,6 +3,8 @@ package com.petwellness.service;
 import com.petwellness.dto.request.LoginRequest;
 import com.petwellness.dto.request.RegisterRequest;
 import com.petwellness.dto.request.ResetPasswordRequest;
+import com.petwellness.dto.request.VerifyOtpRequest;
+import com.petwellness.dto.request.ResendOtpRequest;
 import com.petwellness.dto.response.AuthResponse;
 import com.petwellness.exception.BadRequestException;
 import com.petwellness.exception.ResourceNotFoundException;
@@ -20,6 +22,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Random;
 
 /**
  * Service for authentication operations (register, login, verification, password reset).
@@ -56,18 +61,25 @@ public class AuthService {
                 .phoneNumber(request.getPhoneNumber())
                 .address(request.getAddress())
                 .role(Role.PET_OWNER)
-                .isEmailVerified(false)
-                .isApproved(false) // Needs admin approval separately or auto-approve based on rules
+                .isEmailVerified(false) // User must verify email via OTP
+                .isApproved(true)
                 .profileCompletionPercentage(0)
                 .build();
 
+        // Generate 6-digit OTP
+        String otp = generateOtp();
+        user.setOtp(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(5)); // OTP expires in 5 minutes
+
+        // Log OTP for testing (remove in production)
+        System.out.println("🔐 OTP for " + request.getEmail() + ": " + otp);
+
         User savedUser = userRepository.save(user);
         
-        // Generate and send verification email
-        String token = tokenService.createEmailVerificationToken(savedUser);
-        emailService.sendVerificationEmail(savedUser.getEmail(), token);
+        // Send OTP email
+        emailService.sendOtpEmail(savedUser.getEmail(), otp);
 
-        return "Registration successful. Please check your email for verification.";
+        return "Registration successful. Please check your email for OTP verification.";
     }
 
     /**
@@ -79,16 +91,23 @@ public class AuthService {
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = tokenProvider.generateToken(authentication);
 
         User user = userRepository.findByUsernameOrEmail(request.getEmailOrUsername(), request.getEmailOrUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        // Check if email is verified
+        if (!Boolean.TRUE.equals(user.getIsEmailVerified())) {
+            throw new BadRequestException("Please verify your email before logging in");
+        }
+
+        String jwt = tokenProvider.generateToken(authentication);
+
         return AuthResponse.builder()
                 .token(jwt)
+                .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .role(user.getRole().name())
+                .roles(java.util.List.of("ROLE_" + user.getRole().name()))
                 .message("Login successful")
                 .build();
     }
@@ -98,17 +117,27 @@ public class AuthService {
      */
     @Transactional
     public void verifyEmail(String token) {
+        System.out.println("DEBUG: Verifying email with token: " + token);
         EmailVerificationToken verificationToken = tokenService.getVerificationToken(token);
-        if (verificationToken == null || verificationToken.isExpired()) {
+        
+        if (verificationToken == null) {
+            System.err.println("DEBUG: Token not found in database");
+            throw new BadRequestException("Invalid or expired verification token");
+        }
+        
+        if (verificationToken.isExpired()) {
+            System.err.println("DEBUG: Token is expired. Expiry: " + verificationToken.getExpiryDate());
             throw new BadRequestException("Invalid or expired verification token");
         }
 
+        System.out.println("DEBUG: Token found for user: " + verificationToken.getUserId());
         User user = userRepository.findById(verificationToken.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         
         user.setIsEmailVerified(true);
         userRepository.save(user);
         tokenService.deleteVerificationToken(verificationToken);
+        System.out.println("DEBUG: Email verification successful for user: " + user.getUsername());
     }
 
     /**
@@ -138,5 +167,71 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
         tokenService.deleteResetToken(resetToken);
+    }
+
+    /**
+     * Verify OTP for email verification.
+     */
+    @Transactional
+    public void verifyOtp(VerifyOtpRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + request.getEmail()));
+
+        // Check if already verified
+        if (Boolean.TRUE.equals(user.getIsEmailVerified())) {
+            throw new BadRequestException("Email is already verified");
+        }
+
+        // Check if OTP matches
+        if (user.getOtp() == null || !user.getOtp().equals(request.getOtp())) {
+            throw new BadRequestException("Invalid OTP");
+        }
+
+        // Check if OTP is expired
+        if (user.getOtpExpiry() == null || LocalDateTime.now().isAfter(user.getOtpExpiry())) {
+            throw new BadRequestException("OTP has expired. Please request a new one");
+        }
+
+        // Verify email and clear OTP
+        user.setIsEmailVerified(true);
+        user.setOtp(null);
+        user.setOtpExpiry(null);
+        userRepository.save(user);
+    }
+
+    /**
+     * Resend OTP for email verification.
+     */
+    @Transactional
+    public void resendOtp(ResendOtpRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + request.getEmail()));
+
+        // Check if already verified
+        if (Boolean.TRUE.equals(user.getIsEmailVerified())) {
+            throw new BadRequestException("Email is already verified");
+        }
+
+        // Generate new OTP
+        String otp = generateOtp();
+        user.setOtp(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(5));
+        
+        // Log OTP for testing (remove in production)
+        System.out.println("🔐 Resent OTP for " + request.getEmail() + ": " + otp);
+        
+        userRepository.save(user);
+
+        // Send new OTP email
+        emailService.sendOtpEmail(user.getEmail(), otp);
+    }
+
+    /**
+     * Generate a random 6-digit OTP.
+     */
+    private String generateOtp() {
+        Random random = new Random();
+        int otp = 100000 + random.nextInt(900000); // Range: 100000 to 999999
+        return String.valueOf(otp);
     }
 }

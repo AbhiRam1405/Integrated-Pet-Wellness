@@ -19,6 +19,6 @@ public class OrderItemResponse {
     private String productId;
     private String productName;
     private Integer quantity;
-    private Double priceAtPurchase;
+    private Double price;
     private Double subtotal;
 }

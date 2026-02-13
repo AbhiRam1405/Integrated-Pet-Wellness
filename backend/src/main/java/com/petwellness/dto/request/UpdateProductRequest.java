@@ -25,7 +25,7 @@ public class UpdateProductRequest {
     private Double price;
 
     @PositiveOrZero(message = "Stock cannot be negative")
-    private Integer stock;
+    private Integer stockQuantity;
 
     private ProductCategory category;
 

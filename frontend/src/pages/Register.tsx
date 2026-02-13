@@ -42,10 +42,23 @@ export default function Register() {
             setLoading(true);
             setError(null);
             await authApi.register(data);
-            alert('Registration successful! Please check your email to verify your account.');
-            navigate('/login');
+            // Navigate to OTP verification page with email
+            navigate('/verify-otp', { state: { email: data.email } });
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Registration failed. Please try again.');
+            const errorData = err.response?.data;
+            let msg = 'Registration failed. Please try again.';
+
+            if (typeof errorData === 'string') {
+                msg = errorData;
+            } else if (errorData?.message) {
+                msg = errorData.message;
+            } else if (typeof errorData === 'object') {
+                // Handle validation error map
+                const firstError = Object.values(errorData)[0];
+                if (typeof firstError === 'string') msg = firstError;
+            }
+
+            setError(msg);
         } finally {
             setLoading(false);
         }

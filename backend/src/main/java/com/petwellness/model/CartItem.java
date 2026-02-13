@@ -34,6 +34,8 @@ public class CartItem {
     private Double productPrice;
 
     private Integer quantity;
+    
+    private String productImageUrl;
 
     @CreatedDate
     private LocalDateTime createdAt;

@@ -1,57 +1,49 @@
 package com.petwellness.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-/**
- * Service for sending emails.
- */
 @Service
-@RequiredArgsConstructor
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    @Autowired
+    private JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    @Value("${app.frontend.url}")
-    private String frontendUrl;
-
-    /**
-     * Send email verification mail.
-     */
-    public void sendVerificationEmail(String to, String token) {
-        String url = frontendUrl + "/verify-email?token=" + token;
-        String subject = "Verify your email - Pet Wellness Service";
-        String content = "Please click the link below to verify your email address:\n" + url;
-        
-        sendEmail(to, subject, content);
+    public void sendEmail(String to, String subject, String body) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(body);
+            
+            mailSender.send(message);
+            System.out.println("✅ Email sent successfully to: " + to);
+        } catch (Exception e) {
+            System.err.println("❌ Failed to send email to: " + to);
+            e.printStackTrace();
+        }
     }
 
-    /**
-     * Send password reset mail.
-     */
+    public void sendOtpEmail(String to, String otp) {
+        String subject = "Your OTP for PetWellness Verification";
+        String body = "Hello,\n\nYour One-Time Password (OTP) for verification is: " + otp + 
+                      "\n\nThis OTP is valid for 5 minutes. Please do not share this code with anyone.\n\nBest regards,\nThe PetWellness Team";
+        sendEmail(to, subject, body);
+    }
+    
     public void sendPasswordResetEmail(String to, String token) {
-        String url = frontendUrl + "/reset-password?token=" + token;
-        String subject = "Reset your password - Pet Wellness Service";
-        String content = "Please click the link below to reset your password:\n" + url;
-        
-        sendEmail(to, subject, content);
-    }
-
-    /**
-     * Send generic email.
-     */
-    private void sendEmail(String to, String subject, String content) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromEmail);
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(content);
-        mailSender.send(message);
+        String subject = "Reset Your PetWellness Password";
+        // Assuming there is a frontend URL for password reset, using a placeholder for now
+        String resetLink = "http://localhost:5173/reset-password?token=" + token;
+        String body = "Hello,\n\nWe received a request to reset your password. Click the link below to set a new password:\n\n" + 
+                      resetLink + "\n\nIf you did not request a password reset, please ignore this email.\n\nBest regards,\nThe PetWellness Team";
+        sendEmail(to, subject, body);
     }
 }

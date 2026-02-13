@@ -35,7 +35,13 @@ export default function Login() {
             dispatch(loginStart());
             const response = await authApi.login(data);
             dispatch(loginSuccess({ user: response, token: response.token }));
-            navigate('/dashboard');
+
+            const isAdmin = response.roles?.includes('ROLE_ADMIN');
+            if (isAdmin) {
+                navigate('/admin/approvals');
+            } else {
+                navigate('/dashboard');
+            }
         } catch (err: any) {
             dispatch(loginFailure(err.response?.data?.message || 'Login failed. Please check your credentials.'));
         }

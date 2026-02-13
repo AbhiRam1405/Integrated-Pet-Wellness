@@ -62,4 +62,9 @@ public class AdminProductController {
             @Valid @RequestBody UpdateOrderStatusRequest request) {
         return ResponseEntity.ok(orderService.updateOrderStatus(id, request));
     }
+
+    @GetMapping("/orders/{id}")
+    public ResponseEntity<OrderResponse> getOrderById(@PathVariable String id) {
+        return ResponseEntity.ok(orderService.getOrderById(id, null, true));
+    }
 }

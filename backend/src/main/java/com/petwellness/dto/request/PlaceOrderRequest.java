@@ -15,9 +15,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PlaceOrderRequest {
 
-    @NotBlank(message = "Delivery address is required")
-    private String deliveryAddress;
+    @NotBlank(message = "Shipping address is required")
+    private String shippingAddress;
 
-    @NotBlank(message = "Phone number is required")
     private String phoneNumber;
 }

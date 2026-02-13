@@ -21,14 +21,14 @@ public class AdminController {
 
     private final UserService userService;
 
-    @GetMapping("/pending-users")
+    @GetMapping("/users/pending")
     public ResponseEntity<List<UserProfileResponse>> getPendingUsers() {
         return ResponseEntity.ok(userService.getPendingApprovals());
     }
 
-    @PostMapping("/approve-user/{userId}")
-    public ResponseEntity<MessageResponse> approveUser(@PathVariable String userId) {
-        userService.approveUser(userId);
+    @PutMapping("/users/{username}/approve")
+    public ResponseEntity<MessageResponse> approveUser(@PathVariable String username) {
+        userService.approveUserByUsername(username);
         return ResponseEntity.ok(new MessageResponse("User approved successfully", true));
     }
 }

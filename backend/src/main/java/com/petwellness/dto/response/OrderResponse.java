@@ -23,7 +23,7 @@ public class OrderResponse {
     private LocalDateTime orderDate;
     private Double totalAmount;
     private OrderStatus status;
-    private String deliveryAddress;
+    private String shippingAddress;
     private String phoneNumber;
     private List<OrderItemResponse> items;
     private LocalDateTime createdAt;

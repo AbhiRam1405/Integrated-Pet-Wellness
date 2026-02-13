@@ -9,7 +9,7 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-    user: null,
+    user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null,
     token: localStorage.getItem('jwt_token'),
     isAuthenticated: !!localStorage.getItem('jwt_token'),
     loading: false,
@@ -30,6 +30,7 @@ const authSlice = createSlice({
             state.user = action.payload.user;
             state.token = action.payload.token;
             localStorage.setItem('jwt_token', action.payload.token);
+            localStorage.setItem('user', JSON.stringify(action.payload.user));
         },
         loginFailure: (state, action: PayloadAction<string>) => {
             state.loading = false;
@@ -40,10 +41,12 @@ const authSlice = createSlice({
             state.token = null;
             state.isAuthenticated = false;
             localStorage.removeItem('jwt_token');
+            localStorage.removeItem('user');
         },
         setUser: (state, action: PayloadAction<any>) => {
             state.user = action.payload;
             state.isAuthenticated = true;
+            localStorage.setItem('user', JSON.stringify(action.payload));
         },
     },
 });

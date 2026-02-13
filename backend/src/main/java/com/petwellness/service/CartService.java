@@ -30,19 +30,20 @@ public class CartService {
      * Add an item to the user's cart.
      */
     @Transactional
-    public CartItemResponse addToCart(AddToCartRequest request, String userId) {
+    public void addToCart(AddToCartRequest request, String userId) {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        if (product.getStock() < request.getQuantity()) {
+        if (product.getStockQuantity() < request.getQuantity()) {
             throw new RuntimeException("Insufficient stock available");
         }
 
         // Check if item already exists in cart for this user
-        return cartRepository.findByUserIdAndProductId(userId, request.getProductId())
+        cartRepository.findByUserIdAndProductId(userId, request.getProductId())
                 .map(existingItem -> {
                     existingItem.setQuantity(existingItem.getQuantity() + request.getQuantity());
-                    return mapToResponse(cartRepository.save(existingItem));
+                    cartRepository.save(existingItem);
+                    return null; // Return value not needed anymore
                 })
                 .orElseGet(() -> {
                     CartItem newItem = CartItem.builder()
@@ -51,8 +52,10 @@ public class CartService {
                             .productName(product.getName())
                             .productPrice(product.getPrice())
                             .quantity(request.getQuantity())
+                            .productImageUrl(product.getImageUrl())
                             .build();
-                    return mapToResponse(cartRepository.save(newItem));
+                    cartRepository.save(newItem);
+                    return null; // Return value not needed anymore
                 });
     }
 
@@ -77,7 +80,7 @@ public class CartService {
     /**
      * Update cart item quantity.
      */
-    public CartItemResponse updateQuantity(String itemId, UpdateCartItemRequest request, String userId) {
+    public CartResponse updateQuantity(String itemId, UpdateCartItemRequest request, String userId) {
         CartItem item = cartRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
 
@@ -88,18 +91,19 @@ public class CartService {
         Product product = productRepository.findById(item.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        if (product.getStock() < request.getQuantity()) {
+        if (product.getStockQuantity() < request.getQuantity()) {
             throw new RuntimeException("Insufficient stock available");
         }
 
         item.setQuantity(request.getQuantity());
-        return mapToResponse(cartRepository.save(item));
+        cartRepository.save(item);
+        return getMyCart(userId);
     }
 
     /**
      * Remove an item from the cart.
      */
-    public void removeItem(String itemId, String userId) {
+    public CartResponse removeItem(String itemId, String userId) {
         CartItem item = cartRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
 
@@ -108,6 +112,7 @@ public class CartService {
         }
 
         cartRepository.delete(item);
+        return getMyCart(userId);
     }
 
     /**
@@ -128,6 +133,8 @@ public class CartService {
                 .productName(item.getProductName())
                 .productPrice(item.getProductPrice())
                 .quantity(item.getQuantity())
+                .subtotal(item.getProductPrice() * item.getQuantity())
+                .productImageUrl(item.getProductImageUrl())
                 .createdAt(item.getCreatedAt())
                 .build();
     }

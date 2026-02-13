@@ -4,6 +4,8 @@ import com.petwellness.dto.request.LoginRequest;
 import com.petwellness.dto.request.RegisterRequest;
 import com.petwellness.dto.request.ResetPasswordRequest;
 import com.petwellness.dto.request.ForgotPasswordRequest;
+import com.petwellness.dto.request.VerifyOtpRequest;
+import com.petwellness.dto.request.ResendOtpRequest;
 import com.petwellness.dto.response.AuthResponse;
 import com.petwellness.dto.response.MessageResponse;
 import com.petwellness.service.AuthService;
@@ -37,6 +39,18 @@ public class AuthController {
     public ResponseEntity<MessageResponse> verifyEmail(@RequestParam String token) {
         authService.verifyEmail(token);
         return ResponseEntity.ok(new MessageResponse("Email verified successfully", true));
+    }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<MessageResponse> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        authService.verifyOtp(request);
+        return ResponseEntity.ok(new MessageResponse("Email verified successfully", true));
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<MessageResponse> resendOtp(@Valid @RequestBody ResendOtpRequest request) {
+        authService.resendOtp(request);
+        return ResponseEntity.ok(new MessageResponse("OTP sent to your email", true));
     }
 
     @PostMapping("/forgot-password")

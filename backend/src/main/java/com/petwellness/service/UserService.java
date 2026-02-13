@@ -1,12 +1,16 @@
 package com.petwellness.service;
 
+import com.petwellness.dto.request.ChangePasswordRequest;
 import com.petwellness.dto.request.UpdateProfileRequest;
 import com.petwellness.dto.response.UserProfileResponse;
+import com.petwellness.exception.BadRequestException;
 import com.petwellness.exception.ResourceNotFoundException;
 import com.petwellness.model.Role;
 import com.petwellness.model.User;
 import com.petwellness.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +24,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Get user profile by username.
@@ -50,6 +55,34 @@ public class UserService {
     }
 
     /**
+     * Get current authenticated user's profile.
+     * Extracts username from SecurityContext.
+     */
+    public UserProfileResponse getCurrentUserProfile() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return getUserProfile(username);
+    }
+
+    /**
+     * Change password for the current authenticated user.
+     * Validates old password before updating to new password.
+     */
+    public void changePassword(ChangePasswordRequest request) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
+
+        // Validate old password
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        // Encode and save new password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    /**
      * Get all users pending approval (Admin only).
      */
     public List<UserProfileResponse> getPendingApprovals() {
@@ -59,11 +92,11 @@ public class UserService {
     }
 
     /**
-     * Approve user (Admin only).
+     * Approve user by username (Admin only).
      */
-    public void approveUser(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+    public void approveUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
         user.setIsApproved(true);
         userRepository.save(user);
     }
@@ -93,14 +126,15 @@ public class UserService {
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .role(user.getRole())
+                .roles(java.util.List.of("ROLE_" + user.getRole().name()))
                 .isEmailVerified(user.getIsEmailVerified())
                 .isApproved(user.getIsApproved())
-                .profileCompletionPercentage(user.getProfileCompletionPercentage())
+                .profileCompletion(user.getProfileCompletionPercentage())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
+                .profileImageUrl(user.getProfileImageUrl())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

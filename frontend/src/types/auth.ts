@@ -35,4 +35,5 @@ export interface UserProfileResponse {
     address: string;
     roles: string[];
     profileCompletion: number;
+    createdAt: string;
 }
