@@ -16,6 +16,13 @@ export const adminApi = {
         return response.data;
     },
 
+    rejectUser: async (username: string, reason: string) => {
+        const response = await api.delete<MessageResponse>(`/admin/users/${username}`, {
+            data: { reason }
+        });
+        return response.data;
+    },
+
     // Product Management
     createProduct: async (data: {
         name: string;

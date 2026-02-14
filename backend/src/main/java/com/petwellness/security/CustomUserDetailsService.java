@@ -30,7 +30,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                user.isActive(),
+                true, // Always true to allow AuthService to handle specific status-related error messages
                 true,
                 true,
                 true,

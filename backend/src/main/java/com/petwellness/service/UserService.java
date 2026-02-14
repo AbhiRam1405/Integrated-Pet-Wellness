@@ -25,6 +25,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     /**
      * Get user profile by username.
@@ -99,6 +100,18 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
         user.setIsApproved(true);
         userRepository.save(user);
+    }
+
+    /**
+     * Reject user by username (Admin only).
+     * Sends a notification email with the reason before deleting the user record.
+     */
+    public void rejectUserByUsername(String username, String reason) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
+        
+        emailService.sendRejectionEmail(user.getEmail(), reason);
+        userRepository.delete(user);
     }
 
     /**

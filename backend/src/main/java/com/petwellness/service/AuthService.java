@@ -62,7 +62,7 @@ public class AuthService {
                 .address(request.getAddress())
                 .role(Role.PET_OWNER)
                 .isEmailVerified(false) // User must verify email via OTP
-                .isApproved(true)
+                .isApproved(false)
                 .profileCompletionPercentage(0)
                 .build();
 
@@ -98,6 +98,11 @@ public class AuthService {
         // Check if email is verified
         if (!Boolean.TRUE.equals(user.getIsEmailVerified())) {
             throw new BadRequestException("Please verify your email before logging in");
+        }
+
+        // Check if account is approved by admin
+        if (!Boolean.TRUE.equals(user.getIsApproved())) {
+            throw new BadRequestException("Your account is pending administrator approval");
         }
 
         String jwt = tokenProvider.generateToken(authentication);

@@ -1,8 +1,10 @@
 package com.petwellness.controller;
 
+import com.petwellness.dto.request.RejectionRequest;
 import com.petwellness.dto.response.MessageResponse;
 import com.petwellness.dto.response.UserProfileResponse;
 import com.petwellness.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,5 +32,13 @@ public class AdminController {
     public ResponseEntity<MessageResponse> approveUser(@PathVariable String username) {
         userService.approveUserByUsername(username);
         return ResponseEntity.ok(new MessageResponse("User approved successfully", true));
+    }
+
+    @DeleteMapping("/users/{username}")
+    public ResponseEntity<MessageResponse> rejectUser(
+            @PathVariable String username,
+            @Valid @RequestBody RejectionRequest request) {
+        userService.rejectUserByUsername(username, request.getReason());
+        return ResponseEntity.ok(new MessageResponse("User rejected and notified successfully", true));
     }
 }

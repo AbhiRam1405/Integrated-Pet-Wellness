@@ -64,7 +64,12 @@ export default function Login() {
 
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
                     {error && (
-                        <div className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-600">
+                        <div className={`rounded-xl p-4 text-sm font-medium ${error.includes('pending')
+                                ? 'bg-amber-50 text-amber-700 border border-amber-100 flex gap-3 items-center'
+                                : 'bg-red-50 text-red-600 flex gap-3 items-center'
+                            }`}>
+                            <div className={`h-2 w-2 rounded-full shrink-0 ${error.includes('pending') ? 'bg-amber-400' : 'bg-red-400'
+                                }`} />
                             {error}
                         </div>
                     )}

@@ -46,4 +46,12 @@ public class EmailService {
                       resetLink + "\n\nIf you did not request a password reset, please ignore this email.\n\nBest regards,\nThe PetWellness Team";
         sendEmail(to, subject, body);
     }
+
+    public void sendRejectionEmail(String to, String reason) {
+        String subject = "Update on Your PetWellness Application";
+        String body = "Hello,\n\nThank you for your interest in PetWellness. After reviewing your application, we regret to inform you that we cannot approve your account at this time.\n\n" +
+                      "Reason: " + reason + "\n\n" +
+                      "If you have corrected these issues, you are welcome to register again with accurate information.\n\nBest regards,\nThe PetWellness Team";
+        sendEmail(to, subject, body);
+    }
 }
