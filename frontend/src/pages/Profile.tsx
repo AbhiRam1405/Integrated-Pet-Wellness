@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useDispatch } from 'react-redux';
 import * as z from 'zod';
 import { userApi } from '../api/userApi';
+import { setUser } from '../features/auth/authSlice';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
-import { User, Lock, Mail, Phone, MapPin, Calendar, Shield, Loader2 } from 'lucide-react';
+import { Shield, User, Mail, Phone, MapPin, UserCheck, Clock, Loader2, Calendar, Lock } from 'lucide-react';
 import type { UserProfileResponse } from '../types/user';
+import type { AppDispatch } from '../store';
 
 const updateProfileSchema = z.object({
     firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -80,6 +83,7 @@ type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 type TabType = 'overview' | 'edit' | 'security';
 
 export default function Profile() {
+    const dispatch = useDispatch<AppDispatch>();
     const [activeTab, setActiveTab] = useState<TabType>('overview');
     const [profile, setProfile] = useState<UserProfileResponse | null>(null);
     const [loading, setLoading] = useState(true);
@@ -115,6 +119,7 @@ export default function Profile() {
             setLoading(true);
             const data = await userApi.getProfile();
             setProfile(data);
+            dispatch(setUser(data));
             resetProfile({
                 firstName: data.firstName,
                 lastName: data.lastName,
@@ -154,6 +159,7 @@ export default function Profile() {
             setSuccess(null);
             const updated = await userApi.updateProfile(data);
             setProfile(updated);
+            dispatch(setUser(updated));
             setSuccess('Profile updated successfully!');
             setTimeout(() => setSuccess(null), 3000);
         } catch (err: any) {
@@ -241,6 +247,17 @@ export default function Profile() {
                                     <div className="flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-sm font-semibold text-green-600">
                                         <Shield size={16} />
                                         <span>Verified</span>
+                                    </div>
+                                )}
+                                {profile.isApproved ? (
+                                    <div className="flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-sm font-semibold text-indigo-600">
+                                        <UserCheck size={16} />
+                                        <span>Approved</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-600">
+                                        <Clock size={16} />
+                                        <span>Pending Approval</span>
                                     </div>
                                 )}
                             </div>

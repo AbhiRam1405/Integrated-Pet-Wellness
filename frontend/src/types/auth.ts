@@ -35,5 +35,6 @@ export interface UserProfileResponse {
     address: string;
     roles: string[];
     profileCompletion: number;
+    isApproved: boolean;
     createdAt: string;
 }

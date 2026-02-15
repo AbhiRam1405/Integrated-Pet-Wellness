@@ -1,13 +1,17 @@
 import api from './axiosConfig';
-import type { UserProfileResponse } from '../types/auth';
+import type { UserProfileResponse, MessageResponse } from '../types/user';
 import type { ProductResponse, ProductCategory } from '../types/marketplace';
 import type { AppointmentSlotResponse, ConsultationType } from '../types/appointment';
-import type { MessageResponse } from '../types/auth';
 
 export const adminApi = {
     // User Management
     getPendingUsers: async () => {
         const response = await api.get<UserProfileResponse[]>('/admin/users/pending');
+        return response.data;
+    },
+
+    getAllUsers: async () => {
+        const response = await api.get<UserProfileResponse[]>('/admin/users');
         return response.data;
     },
 

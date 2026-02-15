@@ -28,6 +28,11 @@ public class AdminController {
         return ResponseEntity.ok(userService.getPendingApprovals());
     }
 
+    @GetMapping("/users")
+    public ResponseEntity<List<UserProfileResponse>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
     @PutMapping("/users/{username}/approve")
     public ResponseEntity<MessageResponse> approveUser(@PathVariable String username) {
         userService.approveUserByUsername(username);

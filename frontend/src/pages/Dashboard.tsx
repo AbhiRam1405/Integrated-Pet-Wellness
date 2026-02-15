@@ -1,19 +1,40 @@
 import { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { petApi } from '../api/petApi';
+import { userApi } from '../api/userApi';
+import { setUser } from '../features/auth/authSlice';
 import type { PetResponse } from '../types/pet';
+import type { RootState, AppDispatch } from '../store';
 import { PetCard } from '../components/PetCard';
 import { Button } from '../components/Button';
-import { Plus, Loader2, Dog } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Plus, Loader2, Dog, AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function Dashboard() {
+    const { user } = useSelector((state: RootState) => state.auth);
+    const dispatch = useDispatch<AppDispatch>();
     const [pets, setPets] = useState<PetResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        loadPets();
+        const initDashboard = async () => {
+            await Promise.all([
+                loadPets(),
+                refreshProfile()
+            ]);
+        };
+        initDashboard();
     }, []);
+
+    const refreshProfile = async () => {
+        try {
+            const data = await userApi.getProfile();
+            dispatch(setUser(data));
+        } catch (err) {
+            console.error('Failed to refresh profile', err);
+        }
+    };
 
     const loadPets = async () => {
         try {
@@ -49,6 +70,31 @@ export default function Dashboard() {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+            {/* Account Status Banner */}
+            {user && (
+                <div className={`mb-8 flex items-center gap-4 rounded-3xl p-6 ring-1 transition-all ${user.isApproved
+                    ? 'bg-indigo-50/50 ring-indigo-100'
+                    : 'bg-amber-50/50 ring-amber-100'
+                    }`}>
+                    <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shadow-sm ${user.isApproved ? 'bg-indigo-600 text-white' : 'bg-amber-500 text-white'
+                        }`}>
+                        {user.isApproved ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
+                    </div>
+                    <div>
+                        <h3 className={`text-lg font-black tracking-tight ${user.isApproved ? 'text-indigo-900' : 'text-amber-900'
+                            }`}>
+                            {user.isApproved ? 'Account Fully Approved' : 'Account Pending Approval'}
+                        </h3>
+                        <p className={`text-sm font-medium ${user.isApproved ? 'text-indigo-600/70' : 'text-amber-700/70'
+                            }`}>
+                            {user.isApproved
+                                ? 'Your account has been verified by our administrators. You have full access to all platform features.'
+                                : 'An administrator is currently reviewing your registration. Some features may be restricted until approval.'}
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>

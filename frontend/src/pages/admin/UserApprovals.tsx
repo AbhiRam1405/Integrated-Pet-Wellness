@@ -1,39 +1,73 @@
 import { useEffect, useState } from 'react';
 import { adminApi } from '../../api/adminApi';
-import type { UserProfileResponse } from '../../types/auth';
+import type { UserProfileResponse } from '../../types/user';
 import { Button } from '../../components/Button';
 import { Loader2, CheckCircle, UserCheck, Mail, Calendar, User, X, Phone, MapPin, Shield } from 'lucide-react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 
 export default function UserApprovals() {
-    const [users, setUsers] = useState<UserProfileResponse[]>([]);
+    const [allUsers, setAllUsers] = useState<UserProfileResponse[]>([]);
+    const [displayUsers, setDisplayUsers] = useState<UserProfileResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [selectedUser, setSelectedUser] = useState<UserProfileResponse | null>(null);
+    const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'all'>('pending');
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
-        loadPendingUsers();
+        loadUsers();
     }, []);
 
-    const loadPendingUsers = async () => {
+    useEffect(() => {
+        filterUsers();
+    }, [allUsers, activeTab, searchQuery]);
+
+    const loadUsers = async () => {
         try {
             setLoading(true);
-            const data = await adminApi.getPendingUsers();
-            setUsers(data);
+            const data = await adminApi.getAllUsers();
+            setAllUsers(data);
         } catch (err) {
-            console.error('Failed to load pending users', err);
+            console.error('Failed to load users', err);
         } finally {
             setLoading(false);
         }
+    };
+
+    const filterUsers = () => {
+        let filtered = [...allUsers];
+
+        // Filter by tab
+        if (activeTab === 'pending') {
+            filtered = filtered.filter(u => !u.isApproved);
+        } else if (activeTab === 'approved') {
+            filtered = filtered.filter(u => u.isApproved);
+        }
+
+        // Filter by search
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase();
+            filtered = filtered.filter(u =>
+                u.username.toLowerCase().includes(query) ||
+                u.email.toLowerCase().includes(query) ||
+                `${u.firstName} ${u.lastName}`.toLowerCase().includes(query)
+            );
+        }
+
+        setDisplayUsers(filtered);
     };
 
     const handleApprove = async (username: string) => {
         try {
             setActionLoading(username);
             await adminApi.approveUser(username);
-            setUsers(users.filter(u => u.username !== username));
-            // Show a smoother toast or notification if available, but keeping alert for now as per original code
+
+            // Update local state
+            setAllUsers(prev => prev.map(u =>
+                u.username === username ? { ...u, isApproved: true } : u
+            ));
+
             alert('User approved successfully!');
         } catch (err) {
             alert('Failed to approve user.');
@@ -59,7 +93,10 @@ export default function UserApprovals() {
         try {
             setActionLoading(username);
             await adminApi.rejectUser(username, reason);
-            setUsers(users.filter(u => u.username !== username));
+
+            // Remove from local state
+            setAllUsers(prev => prev.filter(u => u.username !== username));
+
             alert('User rejected and notified successfully.');
         } catch (err) {
             alert('Failed to reject user.');
@@ -78,32 +115,77 @@ export default function UserApprovals() {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-            <div className="mb-10">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="h-10 w-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
-                        <UserCheck size={24} />
+            <div className="mb-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="h-10 w-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
+                            <UserCheck size={24} />
+                        </div>
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">User Management</h1>
                     </div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">User Approvals</h1>
+                    <p className="text-slate-500 font-medium italic">Manage registrations, verify accounts, and monitor platform users.</p>
                 </div>
-                <p className="text-slate-500 font-medium italic">Review and verify new account registrations for the platform.</p>
+
+                <div className="flex flex-col gap-4">
+                    {/* Tab Switcher */}
+                    <div className="flex p-1 bg-slate-100 rounded-2xl w-fit">
+                        {(['pending', 'approved', 'all'] as const).map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab
+                                    ? 'bg-white text-indigo-600 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Search Bar */}
+                    <div className="relative group">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+                            <User size={18} />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search users..."
+                            className="block w-full pl-10 pr-3 py-2 border-2 border-slate-100 rounded-2xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 sm:text-sm transition-all shadow-sm"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+                </div>
             </div>
 
-            {users.length === 0 ? (
+            {displayUsers.length === 0 ? (
                 <div className="bg-white rounded-3xl p-16 text-center shadow-sm ring-1 ring-slate-100 border-2 border-dashed border-slate-100">
                     <CheckCircle size={48} className="mx-auto text-green-500 mb-4 opacity-20" />
-                    <h2 className="text-xl font-bold text-slate-900">All caught up!</h2>
-                    <p className="text-slate-400 font-medium italic">There are no pending user approvals at this time.</p>
+                    <h2 className="text-xl font-bold text-slate-900">
+                        {searchQuery ? 'No users found matching your search' : 'All caught up!'}
+                    </h2>
+                    <p className="text-slate-400 font-medium italic">
+                        {searchQuery
+                            ? 'Try refining your filters or search keywords.'
+                            : `There are no ${activeTab === 'all' ? '' : activeTab} user accounts at this time.`}
+                    </p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {users.map((user) => (
-                        <div key={user.username} className="bg-white rounded-3xl p-6 shadow-sm ring-1 ring-slate-100 transition-all hover:shadow-xl hover:shadow-indigo-50">
+                    {displayUsers.map((user) => (
+                        <div key={user.username} className={`bg-white rounded-3xl p-6 shadow-sm ring-1 transition-all hover:shadow-xl hover:shadow-indigo-50 ${user.isApproved ? 'ring-slate-100' : 'ring-amber-200 bg-amber-50/10'
+                            }`}>
                             <div className="flex items-start justify-between mb-6">
-                                <div className="h-14 w-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400">
+                                <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shadow-sm ${user.isApproved ? 'bg-slate-50 text-slate-400' : 'bg-amber-100 text-amber-600'
+                                    }`}>
                                     <User size={32} />
                                 </div>
-                                <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-[10px] font-black uppercase tracking-widest">
-                                    Pending Verification
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${user.isApproved
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-amber-100 text-amber-700'
+                                    }`}>
+                                    {user.isApproved ? 'Approved & Active' : 'Pending Verification'}
                                 </span>
                             </div>
 
@@ -128,14 +210,16 @@ export default function UserApprovals() {
                             </div>
 
                             <div className="grid grid-cols-1 gap-3">
-                                <Button
-                                    onClick={() => handleApprove(user.username)}
-                                    isLoading={actionLoading === user.username}
-                                    className="w-full shadow-lg shadow-indigo-100"
-                                >
-                                    Confirm Approval
-                                </Button>
-                                <div className="grid grid-cols-2 gap-3">
+                                {!user.isApproved && (
+                                    <Button
+                                        onClick={() => handleApprove(user.username)}
+                                        isLoading={actionLoading === user.username}
+                                        className="w-full shadow-lg shadow-indigo-100"
+                                    >
+                                        Confirm Approval
+                                    </Button>
+                                )}
+                                <div className={`grid gap-3 ${user.isApproved ? 'grid-cols-2' : 'grid-cols-2'}`}>
                                     <Button
                                         variant="outline"
                                         onClick={() => setSelectedUser(user)}
@@ -148,7 +232,7 @@ export default function UserApprovals() {
                                         onClick={() => handleReject(user.username)}
                                         className="w-full border-red-50 text-red-400 font-bold hover:bg-red-50 hover:border-red-100"
                                     >
-                                        Reject
+                                        Delete
                                     </Button>
                                 </div>
                             </div>

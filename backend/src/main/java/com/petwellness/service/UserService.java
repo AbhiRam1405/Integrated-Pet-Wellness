@@ -147,6 +147,15 @@ public class UserService {
     }
 
     /**
+     * Get all users (Admin only).
+     */
+    public List<UserProfileResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Calculate profile completion percentage.
      */
     private int calculateCompletion(User user) {

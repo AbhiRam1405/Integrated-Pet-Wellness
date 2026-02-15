@@ -15,6 +15,8 @@ export interface UserProfileResponse {
     petPreferences?: string;
     role: string;
     isEmailVerified: boolean;
+    isApproved: boolean;
+    profileCompletion: number;
     profileImageUrl?: string;
     dateOfBirth?: string;
     gender?: string;
