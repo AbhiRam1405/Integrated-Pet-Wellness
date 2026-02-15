@@ -20,9 +20,32 @@ const registerSchema = z.object({
     lastName: z.string().min(2, 'Last name is required'),
     phoneNumber: z.string().min(10, 'Invalid phone number'),
     address: z.string().min(5, 'Address is required'),
+    city: z.string().min(2, 'City is required'),
+    state: z.string().min(2, 'State is required'),
+    country: z.string().min(2, 'Country is required'),
+    zipCode: z.string().min(5, 'Zip Code is required'),
+    petCount: z.preprocess((val) => (val === '' ? 0 : Number(val)), z.number().min(0, 'Must be 0 or more')),
+    experienceYears: z.preprocess((val) => (val === '' ? 0 : Number(val)), z.number().min(0, 'Must be 0 or more')),
+    petPreferences: z.string().optional(),
 });
 
-type RegisterFormValues = z.infer<typeof registerSchema>;
+// Explicitly define the form values type
+type RegisterFormValues = {
+    username: string;
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+    zipCode: string;
+    petCount: number;
+    experienceYears: number;
+    petPreferences?: string;
+};
 
 export default function Register() {
     const navigate = useNavigate();
@@ -34,7 +57,11 @@ export default function Register() {
         handleSubmit,
         formState: { errors },
     } = useForm<RegisterFormValues>({
-        resolver: zodResolver(registerSchema),
+        resolver: zodResolver(registerSchema) as any,
+        defaultValues: {
+            petCount: 0,
+            experienceYears: 0,
+        }
     });
 
     const onSubmit = async (data: RegisterFormValues) => {
@@ -45,20 +72,33 @@ export default function Register() {
             // Navigate to OTP verification page with email
             navigate('/verify-otp', { state: { email: data.email } });
         } catch (err: any) {
-            const errorData = err.response?.data;
-            let msg = 'Registration failed. Please try again.';
+            console.error('Registration error:', err);
 
-            if (typeof errorData === 'string') {
-                msg = errorData;
-            } else if (errorData?.message) {
-                msg = errorData.message;
-            } else if (typeof errorData === 'object') {
-                // Handle validation error map
-                const firstError = Object.values(errorData)[0];
-                if (typeof firstError === 'string') msg = firstError;
+            let errorMessage = 'Registration failed. Please try again.';
+
+            if (err.response) {
+                // Server responded with a status code outside the 2xx range
+                const errorData = err.response.data;
+                if (typeof errorData === 'string') {
+                    errorMessage = errorData;
+                } else if (errorData?.message) {
+                    errorMessage = errorData.message;
+                } else if (typeof errorData === 'object' && errorData !== null) {
+                    // Try to find the first validation error message
+                    const values = Object.values(errorData);
+                    if (values.length > 0 && typeof values[0] === 'string') {
+                        errorMessage = values[0] as string;
+                    }
+                }
+            } else if (err.request) {
+                // The request was made but no response was received
+                errorMessage = 'No response from server. Please check your internet connection.';
+            } else {
+                // Something happened in setting up the request
+                errorMessage = err.message || errorMessage;
             }
 
-            setError(msg);
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -127,12 +167,63 @@ export default function Register() {
                         />
                     </div>
 
-                    <Input
-                        label="Home Address"
-                        placeholder="123 Pet Lane, Animal City"
-                        error={errors.address?.message}
-                        {...register('address')}
-                    />
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <Input
+                            label="Home Address"
+                            placeholder="123 Pet Lane"
+                            error={errors.address?.message}
+                            {...register('address')}
+                        />
+                        <Input
+                            label="City"
+                            placeholder="Animal City"
+                            error={errors.city?.message}
+                            {...register('city')}
+                        />
+                        <Input
+                            label="State"
+                            placeholder="State"
+                            error={errors.state?.message}
+                            {...register('state')}
+                        />
+                        <Input
+                            label="Country"
+                            placeholder="Country"
+                            error={errors.country?.message}
+                            {...register('country')}
+                        />
+                        <Input
+                            label="Zip Code"
+                            placeholder="12345"
+                            error={errors.zipCode?.message}
+                            {...register('zipCode')}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                        <Input
+                            label="Number of Pets"
+                            type="number"
+                            min="0"
+                            placeholder="1"
+                            error={errors.petCount?.message}
+                            {...register('petCount')}
+                        />
+                        <Input
+                            label="Years of Experience"
+                            type="number"
+                            min="0"
+                            placeholder="2"
+                            error={errors.experienceYears?.message}
+                            {...register('experienceYears')}
+                        />
+                        <Input
+                            label="Pet Preferences (Optional)"
+                            placeholder="Dogs, Cats..."
+                            error={errors.petPreferences?.message}
+                            {...register('petPreferences')}
+                        />
+                    </div>
 
                     <Button type="submit" className="w-full" size="lg" isLoading={loading}>
                         Create Account

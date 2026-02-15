@@ -21,4 +21,45 @@ public class UpdateProfileRequest {
     private String phoneNumber;
     
     private String address;
+    
+    private String city;
+    
+    private String state;
+    
+    private String country;
+    
+    private String zipCode;
+    
+    private Integer petCount;
+    
+    private Integer experienceYears;
+    
+    private String petPreferences;
+    
+    private String profileImageUrl;
+    
+    // Extended Profile Fields
+    private java.time.LocalDate dateOfBirth;
+    
+    private String gender;
+    
+    private String bio;
+    
+    private String preferredLanguage;
+    
+    // Emergency Contact
+    private String emergencyContactName;
+    
+    private String emergencyContactPhone;
+    
+    private String emergencyContactRelationship;
+    
+    // Social Media
+    private String facebookUrl;
+    
+    private String instagramUrl;
+    
+    private String twitterUrl;
+    
+    private String linkedinUrl;
 }

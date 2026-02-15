@@ -6,9 +6,27 @@ export interface UserProfileResponse {
     lastName: string;
     phoneNumber: string;
     address: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    zipCode?: string;
+    petCount?: number;
+    experienceYears?: number;
+    petPreferences?: string;
     role: string;
     isEmailVerified: boolean;
     profileImageUrl?: string;
+    dateOfBirth?: string;
+    gender?: string;
+    bio?: string;
+    preferredLanguage?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    emergencyContactRelationship?: string;
+    facebookUrl?: string;
+    instagramUrl?: string;
+    twitterUrl?: string;
+    linkedinUrl?: string;
     createdAt: string;
 }
 
@@ -17,6 +35,25 @@ export interface UpdateProfileRequest {
     lastName: string;
     phoneNumber: string;
     address: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    zipCode?: string;
+    petCount?: number;
+    experienceYears?: number;
+    petPreferences?: string;
+    profileImageUrl?: string;
+    dateOfBirth?: string;
+    gender?: string;
+    bio?: string;
+    preferredLanguage?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    emergencyContactRelationship?: string;
+    facebookUrl?: string;
+    instagramUrl?: string;
+    twitterUrl?: string;
+    linkedinUrl?: string;
 }
 
 export interface ChangePasswordRequest {

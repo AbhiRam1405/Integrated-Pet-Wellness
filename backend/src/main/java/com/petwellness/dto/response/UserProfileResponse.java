@@ -43,6 +43,34 @@ public class UserProfileResponse {
     
     private String profileImageUrl;
     
+    // Location fields
+    private String city;
+    private String state;
+    private String country;
+    private String zipCode;
+    
+    // Pet information
+    private Integer petCount;
+    private Integer experienceYears;
+    private String petPreferences;
+    
+    // Extended profile fields
+    private java.time.LocalDate dateOfBirth;
+    private String gender;
+    private String bio;
+    private String preferredLanguage;
+    
+    // Emergency contact
+    private String emergencyContactName;
+    private String emergencyContactPhone;
+    private String emergencyContactRelationship;
+    
+    // Social media
+    private String facebookUrl;
+    private String instagramUrl;
+    private String twitterUrl;
+    private String linkedinUrl;
+    
     private LocalDateTime createdAt;
     
     private LocalDateTime updatedAt;

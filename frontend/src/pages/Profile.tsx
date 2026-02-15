@@ -13,6 +13,25 @@ const updateProfileSchema = z.object({
     lastName: z.string().min(2, 'Last name must be at least 2 characters'),
     phoneNumber: z.string().min(10, 'Phone number must be at least 10 digits'),
     address: z.string().min(5, 'Address must be at least 5 characters'),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    country: z.string().optional(),
+    zipCode: z.string().optional(),
+    petCount: z.preprocess((val) => (val === '' ? undefined : Number(val)), z.number().min(0).optional()),
+    experienceYears: z.preprocess((val) => (val === '' ? undefined : Number(val)), z.number().min(0).optional()),
+    petPreferences: z.string().optional(),
+    profileImageUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+    dateOfBirth: z.string().optional(),
+    gender: z.string().optional(),
+    bio: z.string().max(500, 'Bio must be less than 500 characters').optional(),
+    preferredLanguage: z.string().optional(),
+    emergencyContactName: z.string().optional(),
+    emergencyContactPhone: z.string().optional(),
+    emergencyContactRelationship: z.string().optional(),
+    facebookUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+    instagramUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+    twitterUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+    linkedinUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 });
 
 const changePasswordSchema = z.object({
@@ -29,7 +48,33 @@ const changePasswordSchema = z.object({
     path: ['confirmPassword'],
 });
 
-type UpdateProfileFormValues = z.infer<typeof updateProfileSchema>;
+
+// Explicitly define form values type to avoid z.preprocess inference issues
+type UpdateProfileFormValues = {
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    address: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    zipCode?: string;
+    petCount?: number;
+    experienceYears?: number;
+    petPreferences?: string;
+    profileImageUrl?: string;
+    dateOfBirth?: string;
+    gender?: string;
+    bio?: string;
+    preferredLanguage?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    emergencyContactRelationship?: string;
+    facebookUrl?: string;
+    instagramUrl?: string;
+    twitterUrl?: string;
+    linkedinUrl?: string;
+};
 type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 
 type TabType = 'overview' | 'edit' | 'security';
@@ -49,7 +94,7 @@ export default function Profile() {
         formState: { errors: profileErrors },
         reset: resetProfile,
     } = useForm<UpdateProfileFormValues>({
-        resolver: zodResolver(updateProfileSchema),
+        resolver: zodResolver(updateProfileSchema) as any,
     });
 
     const {
@@ -75,6 +120,25 @@ export default function Profile() {
                 lastName: data.lastName,
                 phoneNumber: data.phoneNumber,
                 address: data.address,
+                city: data.city,
+                state: data.state,
+                country: data.country,
+                zipCode: data.zipCode,
+                petCount: data.petCount,
+                experienceYears: data.experienceYears,
+                petPreferences: data.petPreferences,
+                profileImageUrl: data.profileImageUrl,
+                dateOfBirth: data.dateOfBirth,
+                gender: data.gender,
+                bio: data.bio,
+                preferredLanguage: data.preferredLanguage,
+                emergencyContactName: data.emergencyContactName,
+                emergencyContactPhone: data.emergencyContactPhone,
+                emergencyContactRelationship: data.emergencyContactRelationship,
+                facebookUrl: data.facebookUrl,
+                instagramUrl: data.instagramUrl,
+                twitterUrl: data.twitterUrl,
+                linkedinUrl: data.linkedinUrl,
             });
         } catch (err: any) {
             setError('Failed to load profile');
@@ -270,33 +334,224 @@ export default function Profile() {
                     {activeTab === 'edit' && (
                         <div>
                             <h2 className="mb-6 text-2xl font-bold text-slate-900">Edit Profile</h2>
-                            <form onSubmit={handleSubmitProfile(onUpdateProfile)} className="space-y-6">
-                                <div className="grid gap-6 sm:grid-cols-2">
-                                    <Input
-                                        label="First Name"
-                                        placeholder="John"
-                                        error={profileErrors.firstName?.message}
-                                        {...registerProfile('firstName')}
-                                    />
-                                    <Input
-                                        label="Last Name"
-                                        placeholder="Doe"
-                                        error={profileErrors.lastName?.message}
-                                        {...registerProfile('lastName')}
-                                    />
-                                    <Input
-                                        label="Phone Number"
-                                        placeholder="+1234567890"
-                                        error={profileErrors.phoneNumber?.message}
-                                        {...registerProfile('phoneNumber')}
-                                    />
+                            <form onSubmit={handleSubmitProfile(onUpdateProfile)} className="space-y-8">
+                                {/* Basic Information */}
+                                <div>
+                                    <h3 className="mb-4 text-lg font-semibold text-slate-700">Basic Information</h3>
+                                    <div className="grid gap-6 sm:grid-cols-2">
+                                        <Input
+                                            label="First Name"
+                                            placeholder="John"
+                                            error={profileErrors.firstName?.message}
+                                            {...registerProfile('firstName')}
+                                        />
+                                        <Input
+                                            label="Last Name"
+                                            placeholder="Doe"
+                                            error={profileErrors.lastName?.message}
+                                            {...registerProfile('lastName')}
+                                        />
+                                        <Input
+                                            label="Phone Number"
+                                            placeholder="+1234567890"
+                                            error={profileErrors.phoneNumber?.message}
+                                            {...registerProfile('phoneNumber')}
+                                        />
+                                        <Input
+                                            label="Profile Image URL"
+                                            placeholder="https://example.com/image.jpg"
+                                            error={profileErrors.profileImageUrl?.message}
+                                            {...registerProfile('profileImageUrl')}
+                                        />
+                                    </div>
                                 </div>
-                                <Input
-                                    label="Address"
-                                    placeholder="123 Main St, City, State"
-                                    error={profileErrors.address?.message}
-                                    {...registerProfile('address')}
-                                />
+
+                                {/* Location Information */}
+                                <div>
+                                    <h3 className="mb-4 text-lg font-semibold text-slate-700">Location</h3>
+                                    <div className="grid gap-6 sm:grid-cols-2">
+                                        <Input
+                                            label="Address"
+                                            placeholder="123 Main St"
+                                            error={profileErrors.address?.message}
+                                            {...registerProfile('address')}
+                                        />
+                                        <Input
+                                            label="City"
+                                            placeholder="New York"
+                                            error={profileErrors.city?.message}
+                                            {...registerProfile('city')}
+                                        />
+                                        <Input
+                                            label="State"
+                                            placeholder="NY"
+                                            error={profileErrors.state?.message}
+                                            {...registerProfile('state')}
+                                        />
+                                        <Input
+                                            label="Country"
+                                            placeholder="USA"
+                                            error={profileErrors.country?.message}
+                                            {...registerProfile('country')}
+                                        />
+                                        <Input
+                                            label="Zip Code"
+                                            placeholder="10001"
+                                            error={profileErrors.zipCode?.message}
+                                            {...registerProfile('zipCode')}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Pet Information */}
+                                <div>
+                                    <h3 className="mb-4 text-lg font-semibold text-slate-700">Pet Information</h3>
+                                    <div className="grid gap-6 sm:grid-cols-3">
+                                        <Input
+                                            label="Number of Pets"
+                                            type="number"
+                                            min="0"
+                                            placeholder="2"
+                                            error={profileErrors.petCount?.message}
+                                            {...registerProfile('petCount')}
+                                        />
+                                        <Input
+                                            label="Years of Experience"
+                                            type="number"
+                                            min="0"
+                                            placeholder="5"
+                                            error={profileErrors.experienceYears?.message}
+                                            {...registerProfile('experienceYears')}
+                                        />
+                                        <Input
+                                            label="Pet Preferences"
+                                            placeholder="Dogs, Cats"
+                                            error={profileErrors.petPreferences?.message}
+                                            {...registerProfile('petPreferences')}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Personal Information */}
+                                <div>
+                                    <h3 className="mb-4 text-lg font-semibold text-slate-700">Personal Information</h3>
+                                    <div className="grid gap-6 sm:grid-cols-2">
+                                        <Input
+                                            label="Date of Birth"
+                                            type="date"
+                                            error={profileErrors.dateOfBirth?.message}
+                                            {...registerProfile('dateOfBirth')}
+                                        />
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                                Gender
+                                            </label>
+                                            <select
+                                                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                                {...registerProfile('gender')}
+                                            >
+                                                <option value="">Select gender</option>
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                                <option value="Other">Other</option>
+                                                <option value="Prefer not to say">Prefer not to say</option>
+                                            </select>
+                                            {profileErrors.gender && (
+                                                <p className="mt-1 text-sm text-red-600">{profileErrors.gender.message}</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                                Preferred Language
+                                            </label>
+                                            <select
+                                                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                                {...registerProfile('preferredLanguage')}
+                                            >
+                                                <option value="">Select language</option>
+                                                <option value="English">English</option>
+                                                <option value="Hindi">Hindi</option>
+                                                <option value="Spanish">Spanish</option>
+                                                <option value="French">French</option>
+                                                <option value="German">German</option>
+                                            </select>
+                                            {profileErrors.preferredLanguage && (
+                                                <p className="mt-1 text-sm text-red-600">{profileErrors.preferredLanguage.message}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="mt-6">
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                            Bio / About Me
+                                        </label>
+                                        <textarea
+                                            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 min-h-[100px]"
+                                            placeholder="Tell us about yourself..."
+                                            maxLength={500}
+                                            {...registerProfile('bio')}
+                                        />
+                                        {profileErrors.bio && (
+                                            <p className="mt-1 text-sm text-red-600">{profileErrors.bio.message}</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Emergency Contact */}
+                                <div>
+                                    <h3 className="mb-4 text-lg font-semibold text-slate-700">Emergency Contact</h3>
+                                    <div className="grid gap-6 sm:grid-cols-3">
+                                        <Input
+                                            label="Contact Name"
+                                            placeholder="Jane Doe"
+                                            error={profileErrors.emergencyContactName?.message}
+                                            {...registerProfile('emergencyContactName')}
+                                        />
+                                        <Input
+                                            label="Contact Phone"
+                                            placeholder="+1234567890"
+                                            error={profileErrors.emergencyContactPhone?.message}
+                                            {...registerProfile('emergencyContactPhone')}
+                                        />
+                                        <Input
+                                            label="Relationship"
+                                            placeholder="Spouse, Parent, Friend"
+                                            error={profileErrors.emergencyContactRelationship?.message}
+                                            {...registerProfile('emergencyContactRelationship')}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Social Media Links */}
+                                <div>
+                                    <h3 className="mb-4 text-lg font-semibold text-slate-700">Social Media</h3>
+                                    <div className="grid gap-6 sm:grid-cols-2">
+                                        <Input
+                                            label="Facebook URL"
+                                            placeholder="https://facebook.com/username"
+                                            error={profileErrors.facebookUrl?.message}
+                                            {...registerProfile('facebookUrl')}
+                                        />
+                                        <Input
+                                            label="Instagram URL"
+                                            placeholder="https://instagram.com/username"
+                                            error={profileErrors.instagramUrl?.message}
+                                            {...registerProfile('instagramUrl')}
+                                        />
+                                        <Input
+                                            label="Twitter URL"
+                                            placeholder="https://twitter.com/username"
+                                            error={profileErrors.twitterUrl?.message}
+                                            {...registerProfile('twitterUrl')}
+                                        />
+                                        <Input
+                                            label="LinkedIn URL"
+                                            placeholder="https://linkedin.com/in/username"
+                                            error={profileErrors.linkedinUrl?.message}
+                                            {...registerProfile('linkedinUrl')}
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="flex gap-4">
                                     <Button type="submit" className="flex-1" isLoading={updateLoading}>
                                         Save Changes

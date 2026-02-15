@@ -43,10 +43,42 @@ public class UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
 
+        // Basic fields
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
         if (request.getLastName() != null) user.setLastName(request.getLastName());
         if (request.getPhoneNumber() != null) user.setPhoneNumber(request.getPhoneNumber());
         if (request.getAddress() != null) user.setAddress(request.getAddress());
+        
+        // Location fields
+        if (request.getCity() != null) user.setCity(request.getCity());
+        if (request.getState() != null) user.setState(request.getState());
+        if (request.getCountry() != null) user.setCountry(request.getCountry());
+        if (request.getZipCode() != null) user.setZipCode(request.getZipCode());
+        
+        // Pet information
+        if (request.getPetCount() != null) user.setPetCount(request.getPetCount());
+        if (request.getExperienceYears() != null) user.setExperienceYears(request.getExperienceYears());
+        if (request.getPetPreferences() != null) user.setPetPreferences(request.getPetPreferences());
+        
+        // Profile image
+        if (request.getProfileImageUrl() != null) user.setProfileImageUrl(request.getProfileImageUrl());
+        
+        // Extended profile fields
+        if (request.getDateOfBirth() != null) user.setDateOfBirth(request.getDateOfBirth());
+        if (request.getGender() != null) user.setGender(request.getGender());
+        if (request.getBio() != null) user.setBio(request.getBio());
+        if (request.getPreferredLanguage() != null) user.setPreferredLanguage(request.getPreferredLanguage());
+        
+        // Emergency contact
+        if (request.getEmergencyContactName() != null) user.setEmergencyContactName(request.getEmergencyContactName());
+        if (request.getEmergencyContactPhone() != null) user.setEmergencyContactPhone(request.getEmergencyContactPhone());
+        if (request.getEmergencyContactRelationship() != null) user.setEmergencyContactRelationship(request.getEmergencyContactRelationship());
+        
+        // Social media
+        if (request.getFacebookUrl() != null) user.setFacebookUrl(request.getFacebookUrl());
+        if (request.getInstagramUrl() != null) user.setInstagramUrl(request.getInstagramUrl());
+        if (request.getTwitterUrl() != null) user.setTwitterUrl(request.getTwitterUrl());
+        if (request.getLinkedinUrl() != null) user.setLinkedinUrl(request.getLinkedinUrl());
 
         // Update profile completion percentage
         user.setProfileCompletionPercentage(calculateCompletion(user));
@@ -147,7 +179,25 @@ public class UserService {
                 .lastName(user.getLastName())
                 .phoneNumber(user.getPhoneNumber())
                 .address(user.getAddress())
+                .city(user.getCity())
+                .state(user.getState())
+                .country(user.getCountry())
+                .zipCode(user.getZipCode())
+                .petCount(user.getPetCount())
+                .experienceYears(user.getExperienceYears())
+                .petPreferences(user.getPetPreferences())
                 .profileImageUrl(user.getProfileImageUrl())
+                .dateOfBirth(user.getDateOfBirth())
+                .gender(user.getGender())
+                .bio(user.getBio())
+                .preferredLanguage(user.getPreferredLanguage())
+                .emergencyContactName(user.getEmergencyContactName())
+                .emergencyContactPhone(user.getEmergencyContactPhone())
+                .emergencyContactRelationship(user.getEmergencyContactRelationship())
+                .facebookUrl(user.getFacebookUrl())
+                .instagramUrl(user.getInstagramUrl())
+                .twitterUrl(user.getTwitterUrl())
+                .linkedinUrl(user.getLinkedinUrl())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

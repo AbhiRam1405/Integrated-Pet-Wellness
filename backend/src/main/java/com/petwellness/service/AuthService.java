@@ -60,9 +60,17 @@ public class AuthService {
                 .lastName(request.getLastName())
                 .phoneNumber(request.getPhoneNumber())
                 .address(request.getAddress())
+                .city(request.getCity())
+                .state(request.getState())
+                .country(request.getCountry())
+                .zipCode(request.getZipCode())
+                .petCount(request.getPetCount())
+                .experienceYears(request.getExperienceYears())
+                .petPreferences(request.getPetPreferences())
                 .role(Role.PET_OWNER)
                 .isEmailVerified(false) // User must verify email via OTP
                 .isApproved(false)
+                .profileCompleted(false)
                 .profileCompletionPercentage(0)
                 .build();
 
@@ -95,14 +103,25 @@ public class AuthService {
         User user = userRepository.findByUsernameOrEmail(request.getEmailOrUsername(), request.getEmailOrUsername())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Check if email is verified
-        if (!Boolean.TRUE.equals(user.getIsEmailVerified())) {
-            throw new BadRequestException("Please verify your email before logging in");
-        }
-
-        // Check if account is approved by admin
-        if (!Boolean.TRUE.equals(user.getIsApproved())) {
-            throw new BadRequestException("Your account is pending administrator approval");
+        // Check if email is verified and approved based on Role
+        if (user.getRole() == Role.PET_OWNER) {
+            // Strict checks for Pet Owner
+            if (!Boolean.TRUE.equals(user.getIsEmailVerified())) {
+                throw new org.springframework.security.access.AccessDeniedException("EMAIL_NOT_VERIFIED: Please verify your email address to continue.");
+            }
+            if (!Boolean.TRUE.equals(user.getIsApproved())) {
+                throw new org.springframework.security.access.AccessDeniedException("APPROVAL_PENDING: Your account is awaiting administrator approval.");
+            }
+            // Note: Profile completion is NOT required for login
+            // Users can login and complete their profile after authentication
+        } else {
+            // Standard checks for other roles
+            if (!Boolean.TRUE.equals(user.getIsEmailVerified())) {
+                throw new BadRequestException("Please verify your email before logging in");
+            }
+            if (!Boolean.TRUE.equals(user.getIsApproved())) {
+                throw new BadRequestException("Your account is pending administrator approval");
+            }
         }
 
         String jwt = tokenProvider.generateToken(authentication);

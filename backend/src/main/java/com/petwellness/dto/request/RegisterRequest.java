@@ -38,4 +38,14 @@ public class RegisterRequest {
     private String phoneNumber;
     
     private String address;
+    
+    // Extended Profile Fields
+    private String city;
+    private String state;
+    private String country;
+    private String zipCode;
+    
+    private Integer petCount;
+    private Integer experienceYears;
+    private String petPreferences;
 }
