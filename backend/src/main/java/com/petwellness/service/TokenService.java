@@ -22,7 +22,7 @@ public class TokenService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     private static final long EMAIL_VERIFICATION_EXPIRATION = 24; // 24 hours
-    private static final long PASSWORD_RESET_EXPIRATION = 1; // 1 hour
+    private static final long PASSWORD_RESET_EXPIRATION_MINUTES = 15; // 15 minutes
 
     /**
      * Create email verification token.
@@ -48,7 +48,7 @@ public class TokenService {
         PasswordResetToken resetToken = PasswordResetToken.builder()
                 .token(token)
                 .userId(user.getId())
-                .expiryDate(LocalDateTime.now().plusHours(PASSWORD_RESET_EXPIRATION))
+                .expiryDate(LocalDateTime.now().plusMinutes(PASSWORD_RESET_EXPIRATION_MINUTES))
                 .build();
         
         passwordResetTokenRepository.deleteByUserId(user.getId());

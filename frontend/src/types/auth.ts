@@ -38,3 +38,12 @@ export interface UserProfileResponse {
     isApproved: boolean;
     createdAt: string;
 }
+
+export interface ForgotPasswordRequest {
+    email: string;
+}
+
+export interface ResetPasswordRequest {
+    token: string;
+    newPassword: string;
+}

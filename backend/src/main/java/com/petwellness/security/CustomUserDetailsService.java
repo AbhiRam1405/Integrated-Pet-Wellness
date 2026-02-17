@@ -30,7 +30,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                user.isActive(), // Check if account is active/eligible
+                true, // enabled is always true to allow descriptve checks in AuthService
                 true,
                 true,
                 true,

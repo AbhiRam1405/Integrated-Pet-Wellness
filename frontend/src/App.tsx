@@ -18,6 +18,8 @@ import InventoryManagement from './pages/admin/InventoryManagement'
 import SlotManagement from './pages/admin/SlotManagement'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminOrderDetails from './pages/admin/AdminOrderDetails'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import { useSelector, useDispatch } from 'react-redux'
 import type { RootState } from './store'
 import { logout, setUser } from './features/auth/authSlice'
@@ -114,6 +116,8 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Protected Routes - Common */}
           <Route path="/dashboard" element={
