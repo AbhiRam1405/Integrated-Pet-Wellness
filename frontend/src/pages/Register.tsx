@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../api/authApi';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
-import { Dog } from 'lucide-react';
+import { Dog, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 
 const registerSchema = z.object({
@@ -106,7 +106,13 @@ export default function Register() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
-            <div className="w-full max-w-2xl space-y-8 rounded-3xl bg-white p-10 shadow-xl shadow-slate-200">
+            <div className="w-full max-w-2xl space-y-8 rounded-3xl bg-white p-10 shadow-xl shadow-slate-200 relative pt-16">
+                <Link
+                    to="/"
+                    className="absolute top-6 left-8 flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors"
+                >
+                    <ArrowLeft size={16} /> Back to Home
+                </Link>
                 <div className="text-center">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200">
                         <Dog size={32} strokeWidth={2.5} />

@@ -20,6 +20,7 @@ import AdminOrders from './pages/admin/AdminOrders'
 import AdminOrderDetails from './pages/admin/AdminOrderDetails'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import LandingPage from './pages/LandingPage'
 import { useSelector, useDispatch } from 'react-redux'
 import type { RootState } from './store'
 import { logout, setUser } from './features/auth/authSlice'
@@ -66,7 +67,7 @@ function App() {
         <nav className="bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-40 backdrop-blur-md bg-white/80">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-8">
-              <Link to="/dashboard" className="text-xl font-black text-indigo-600 tracking-tighter flex items-center gap-2">
+              <Link to="/" className="text-xl font-black text-indigo-600 tracking-tighter flex items-center gap-2">
                 <div className="h-8 w-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">🐾</div>
                 PETWELLNESS
               </Link>
@@ -109,7 +110,7 @@ function App() {
 
       <main className="flex-1">
         <Routes>
-          <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
+          <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
 
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />

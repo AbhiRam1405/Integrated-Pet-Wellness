@@ -100,12 +100,19 @@ export default function Dashboard() {
                     <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
                     <p className="mt-1 text-slate-500 font-medium">Welcome back! Manage your pet family here.</p>
                 </div>
-                <Link to="/pets/add">
-                    <Button className="flex items-center gap-2" size="lg">
-                        <Plus size={20} />
-                        Register New Pet
-                    </Button>
-                </Link>
+                <div className="flex items-center gap-3">
+                    <Link to="/">
+                        <Button variant="ghost" className="flex items-center gap-2">
+                            View Site
+                        </Button>
+                    </Link>
+                    <Link to="/pets/add">
+                        <Button className="flex items-center gap-2" size="lg">
+                            <Plus size={20} />
+                            Register New Pet
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             {error && (

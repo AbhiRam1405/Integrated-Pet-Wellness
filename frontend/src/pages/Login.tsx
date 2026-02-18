@@ -7,7 +7,7 @@ import { loginStart, loginSuccess, loginFailure } from '../features/auth/authSli
 import { authApi } from '../api/authApi';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
-import { Dog } from 'lucide-react';
+import { Dog, ArrowLeft } from 'lucide-react';
 import type { RootState } from '../store';
 
 const loginSchema = z.object({
@@ -49,7 +49,13 @@ export default function Login() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
-            <div className="w-full max-w-md space-y-8 rounded-3xl bg-white p-10 shadow-xl shadow-slate-200">
+            <div className="w-full max-w-md space-y-8 rounded-3xl bg-white p-10 shadow-xl shadow-slate-200 relative pt-16">
+                <Link
+                    to="/"
+                    className="absolute top-6 left-8 flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-indigo-600 transition-colors"
+                >
+                    <ArrowLeft size={16} /> Back to Home
+                </Link>
                 <div className="text-center">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200">
                         <Dog size={32} strokeWidth={2.5} />
@@ -65,8 +71,8 @@ export default function Login() {
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
                     {error && (
                         <div className={`rounded-xl p-4 text-sm font-medium ${error.includes('pending')
-                                ? 'bg-amber-50 text-amber-700 border border-amber-100 flex gap-3 items-center'
-                                : 'bg-red-50 text-red-600 flex gap-3 items-center'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-100 flex gap-3 items-center'
+                            : 'bg-red-50 text-red-600 flex gap-3 items-center'
                             }`}>
                             <div className={`h-2 w-2 rounded-full shrink-0 ${error.includes('pending') ? 'bg-amber-400' : 'bg-red-400'
                                 }`} />
