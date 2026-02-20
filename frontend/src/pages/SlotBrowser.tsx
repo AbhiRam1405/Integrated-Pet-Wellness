@@ -7,6 +7,7 @@ import { Button } from '../components/Button';
 import { BookingModal } from '../components/BookingModal';
 import { Calendar, Clock, Loader2, Stethoscope, MapPin, Video, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 export default function SlotBrowser() {
     const [slots, setSlots] = useState<AppointmentSlotResponse[]>([]);
@@ -38,11 +39,36 @@ export default function SlotBrowser() {
         }
     };
 
-    const handleBookClick = (slot: AppointmentSlotResponse) => {
+    const handleBookingClick = (slot: AppointmentSlotResponse) => {
         if (pets.length === 0) {
-            if (window.confirm('You need to register a pet before booking an appointment. Add one now?')) {
-                navigate('/pets/add');
-            }
+            toast((t) => (
+                <div className="flex flex-col gap-2 p-1">
+                    <div className="flex items-center gap-2 text-indigo-600 mb-1">
+                        <Info size={18} />
+                        <span className="font-bold">No Pets Found</span>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                        You need to register a pet before booking an appointment. Add one now?
+                    </p>
+                    <div className="flex justify-end gap-2 mt-3">
+                        <button
+                            onClick={() => toast.dismiss(t.id)}
+                            className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 rounded-lg transition-colors"
+                        >
+                            Later
+                        </button>
+                        <button
+                            onClick={() => {
+                                toast.dismiss(t.id);
+                                navigate('/pets/add');
+                            }}
+                            className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-md"
+                        >
+                            Register Pet
+                        </button>
+                    </div>
+                </div>
+            ), { duration: 8000 });
             return;
         }
         setSelectedSlot(slot);
@@ -58,10 +84,11 @@ export default function SlotBrowser() {
                 petId: data.petId,
                 notes: data.notes,
             });
+            toast.success('Appointment booked successfully!');
             setIsModalOpen(false);
             navigate('/appointments');
         } catch (err) {
-            alert('Failed to book appointment. Please try again.');
+            toast.error('Failed to book appointment. Please try again.');
         } finally {
             setBookingLoading(false);
         }
@@ -130,7 +157,7 @@ export default function SlotBrowser() {
 
                             <div className="mt-8 pt-6 border-t border-slate-50">
                                 <Button
-                                    onClick={() => handleBookClick(slot)}
+                                    onClick={() => handleBookingClick(slot)}
                                     className="w-full shadow-lg shadow-indigo-100"
                                 >
                                     Book Appointment

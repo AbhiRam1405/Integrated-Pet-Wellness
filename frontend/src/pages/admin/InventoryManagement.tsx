@@ -6,6 +6,7 @@ import { ProductCategory } from '../../types/marketplace';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Loader2, Package, Plus, Trash2, Edit3, Save, X, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function InventoryManagement() {
     const [products, setProducts] = useState<ProductResponse[]>([]);
@@ -43,28 +44,58 @@ export default function InventoryManagement() {
         try {
             if (editingId) {
                 await adminApi.updateProduct(editingId, formData);
-                alert('Product updated!');
+                toast.success('Product updated successfully!');
             } else {
                 await adminApi.createProduct(formData);
-                alert('Product created!');
+                toast.success('Product created successfully!');
             }
             setIsAdding(false);
             setEditingId(null);
             loadProducts();
             setFormData({ name: '', description: '', price: 0, category: 'FOOD', stockQuantity: 0, imageUrl: '' });
         } catch (err) {
-            alert('Operation failed.');
+            toast.error('Operation failed. Please check your inputs.');
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (window.confirm('Delete this product?')) {
-            try {
-                await adminApi.deleteProduct(id);
-                setProducts(products.filter(p => p.id !== id));
-            } catch (err) {
-                alert('Delete failed.');
-            }
+    const handleDelete = (id: string) => {
+        toast((t) => (
+            <div className="flex flex-col gap-2 p-1">
+                <div className="flex items-center gap-2 text-red-600 mb-1">
+                    <Trash2 size={18} />
+                    <span className="font-bold">Delete Product?</span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                    Are you sure you want to remove this item from inventory?
+                </p>
+                <div className="flex justify-end gap-2 mt-3">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 rounded-lg transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            await processDelete(id);
+                        }}
+                        className="px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
+    };
+
+    const processDelete = async (id: string) => {
+        try {
+            await adminApi.deleteProduct(id);
+            setProducts(prev => prev.filter(p => p.id !== id));
+            toast.success('Product deleted successfully');
+        } catch (err) {
+            toast.error('Failed to delete product.');
         }
     };
 

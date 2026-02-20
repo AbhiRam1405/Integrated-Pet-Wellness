@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { marketplaceApi } from '../../api/marketplaceApi';
 import type { OrderResponse } from '../../types/marketplace';
 import { Loader2, ArrowLeft, Package, MapPin, Phone, User } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function AdminOrderDetails() {
     const { id } = useParams<{ id: string }>();
@@ -34,10 +35,11 @@ export default function AdminOrderDetails() {
         try {
             setUpdating(true);
             await marketplaceApi.updateOrderStatus(id, newStatus);
+            toast.success(`Order status updated to ${newStatus}`);
             // Reload to get updated state
             await loadOrder(id);
         } catch (err) {
-            alert('Failed to update status');
+            toast.error('Failed to update status');
         } finally {
             setUpdating(false);
         }

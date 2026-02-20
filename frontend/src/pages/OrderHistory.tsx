@@ -4,6 +4,7 @@ import type { OrderResponse } from '../types/marketplace';
 import { Button } from '../components/Button';
 import { Loader2, Package, ShoppingBag, CheckCircle2, Truck, Clock, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 export default function OrderHistory() {
     const [orders, setOrders] = useState<OrderResponse[]>([]);
@@ -25,14 +26,46 @@ export default function OrderHistory() {
         }
     };
 
-    const handleCancelOrder = async (id: string) => {
-        if (window.confirm('Are you sure you want to cancel this order?')) {
-            try {
-                await marketplaceApi.cancelOrder(id);
-                setOrders(orders.map(o => o.id === id ? { ...o, status: 'CANCELLED' as any } : o));
-            } catch (err) {
-                alert('Failed to cancel order.');
-            }
+    const handleCancelOrder = (id: string) => {
+        toast((t) => (
+            <div className="flex flex-col gap-2 p-1">
+                <div className="flex items-center gap-2 text-red-600 mb-1">
+                    <XCircle size={18} />
+                    <span className="font-bold">Cancel Order?</span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                    Are you sure you want to cancel this order?
+                </p>
+                <div className="flex justify-end gap-2 mt-3">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 rounded-lg transition-colors"
+                    >
+                        No, Keep it
+                    </button>
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            await processCancelOrder(id);
+                        }}
+                        className="px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm"
+                    >
+                        Yes, Cancel
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
+    };
+
+    const processCancelOrder = async (id: string) => {
+        try {
+            await marketplaceApi.cancelOrder(id);
+            setOrders(prev => prev.map(order =>
+                order.id === id ? { ...order, status: 'CANCELLED' } : order
+            ));
+            toast.success('Order cancelled successfully');
+        } catch (err) {
+            toast.error('Failed to cancel order.');
         }
     };
 

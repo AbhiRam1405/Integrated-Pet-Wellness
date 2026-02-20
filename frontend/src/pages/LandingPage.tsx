@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, type Variants } from 'framer-motion';
 import { useSelector } from 'react-redux';
@@ -13,11 +14,40 @@ import {
     ArrowRight,
     Instagram,
     Twitter,
-    Github
+    Github,
+    Mail,
+    Phone,
+    MapPin,
+    Send,
+    Check
 } from 'lucide-react';
+
+import { contactApi } from '../api/contactApi';
 
 const LandingPage = () => {
     const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+    const [formState, setFormState] = useState({ name: '', email: '', subject: '', message: '' });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        setError(null);
+        try {
+            await contactApi.submitContact(formState);
+            setIsSubmitted(true);
+            setFormState({ name: '', email: '', subject: '', message: '' });
+            setTimeout(() => setIsSubmitted(false), 5000);
+        } catch (err: any) {
+            console.error('Contact submission failed:', err);
+            setError('Failed to send message. Please try again later.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const containerVariants: Variants = {
         hidden: { opacity: 0 },
         visible: {
@@ -110,6 +140,7 @@ const LandingPage = () => {
                         <a href="#features" className="hover:text-indigo-600 transition-colors">Features</a>
                         <a href="#how-it-works" className="hover:text-indigo-600 transition-colors">How it Works</a>
                         <a href="#about" className="hover:text-indigo-600 transition-colors">About Us</a>
+                        <a href="#contact" className="hover:text-indigo-600 transition-colors">Contact</a>
                     </div>
                     <div className="flex items-center gap-4">
                         {isAuthenticated ? (
@@ -312,33 +343,130 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="py-24">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="bg-orange-500 rounded-[48px] p-12 lg:p-20 text-center relative overflow-hidden shadow-2xl shadow-orange-200">
-                        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-orange-400 via-orange-500 to-orange-600 -z-10" />
-                        <h2 className="text-4xl lg:text-6xl font-black text-white mb-8 leading-tight">
-                            Ready to give your pet the best care?
-                        </h2>
-                        <p className="text-xl text-orange-50 leading-relaxed mb-12 max-w-2xl mx-auto font-medium">
-                            Join thousands of pet owners who are already managing their pet's wellness the smart way.
-                        </p>
-                        <div className="flex flex-wrap justify-center gap-6">
-                            {isAuthenticated ? (
-                                <Link to="/dashboard" className="bg-white text-orange-600 px-10 py-5 rounded-2xl text-xl font-black hover:bg-slate-50 transition-all shadow-xl active:scale-95">
-                                    Go to Dashboard
-                                </Link>
-                            ) : (
-                                <>
-                                    <Link to="/register" className="bg-white text-orange-600 px-10 py-5 rounded-2xl text-xl font-black hover:bg-slate-50 transition-all shadow-xl active:scale-95">
-                                        Create Free Account
-                                    </Link>
-                                    <Link to="/about" className="bg-orange-600/20 text-white border-2 border-white/20 px-10 py-5 rounded-2xl text-xl font-black hover:bg-orange-600/40 transition-all active:scale-95">
-                                        Learn More
-                                    </Link>
-                                </>
-                            )}
-                        </div>
+            {/* Contact Us Section */}
+            <section id="contact" className="py-24 bg-slate-50/50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid lg:grid-cols-2 gap-16 items-start">
+                        {/* Contact Info */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -30 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6 }}
+                        >
+                            <h2 className="text-indigo-600 font-black uppercase tracking-widest text-sm mb-4">Get In Touch</h2>
+                            <h3 className="text-4xl lg:text-5xl font-black text-slate-900 mb-8">We'd love to hear from you.</h3>
+                            <p className="text-lg text-slate-600 mb-12 max-w-lg">
+                                Have questions about our services or need help with your pet's health records? Reach out to our dedicated support team.
+                            </p>
+
+                            <div className="space-y-8">
+                                <div className="flex items-center gap-6 group">
+                                    <div className="h-14 w-14 bg-white rounded-2xl shadow-lg flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                                        <Mail size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-slate-900 mb-1">Email Us</h4>
+                                        <p className="text-slate-500">support@petwellness.com</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-6 group">
+                                    <div className="h-14 w-14 bg-white rounded-2xl shadow-lg flex items-center justify-center text-orange-500 group-hover:bg-orange-500 group-hover:text-white transition-all duration-300">
+                                        <Phone size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-slate-900 mb-1">Call Us</h4>
+                                        <p className="text-slate-500">+1 (555) 000-1234</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-6 group">
+                                    <div className="h-14 w-14 bg-white rounded-2xl shadow-lg flex items-center justify-center text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                                        <MapPin size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-slate-900 mb-1">Visit Us</h4>
+                                        <p className="text-slate-500">123 Pet Lane, Care City</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Contact Form */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6 }}
+                            className="bg-white p-8 lg:p-12 rounded-[40px] shadow-2xl shadow-slate-200 border border-slate-50"
+                        >
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700 ml-1">Full Name</label>
+                                        <input
+                                            required
+                                            type="text"
+                                            placeholder="John Doe"
+                                            value={formState.name}
+                                            onChange={(e) => setFormState({ ...formState, name: e.target.value })}
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all placeholder:text-slate-300 font-medium"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700 ml-1">Email Address</label>
+                                        <input
+                                            required
+                                            type="email"
+                                            placeholder="john@example.com"
+                                            value={formState.email}
+                                            onChange={(e) => setFormState({ ...formState, email: e.target.value })}
+                                            className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all placeholder:text-slate-300 font-medium"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700 ml-1">Subject</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        placeholder="How can we help?"
+                                        value={formState.subject}
+                                        onChange={(e) => setFormState({ ...formState, subject: e.target.value })}
+                                        className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all placeholder:text-slate-300 font-medium"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-slate-700 ml-1">Message</label>
+                                    <textarea
+                                        required
+                                        rows={4}
+                                        placeholder="Your message here..."
+                                        value={formState.message}
+                                        onChange={(e) => setFormState({ ...formState, message: e.target.value })}
+                                        className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all placeholder:text-slate-300 font-medium resize-none"
+                                    />
+                                </div>
+                                {error && (
+                                    <p className="text-red-500 text-sm font-bold ml-1">{error}</p>
+                                )}
+                                <button
+                                    disabled={isSubmitting || isSubmitted}
+                                    type="submit"
+                                    className={`w-full py-5 rounded-2xl text-lg font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg ${isSubmitted
+                                        ? 'bg-emerald-500 text-white shadow-emerald-100'
+                                        : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'
+                                        }`}
+                                >
+                                    {isSubmitting ? (
+                                        <Activity className="animate-spin" />
+                                    ) : isSubmitted ? (
+                                        <>Message Sent <Check /></>
+                                    ) : (
+                                        <>Send Message <Send size={20} /></>
+                                    )}
+                                </button>
+                            </form>
+                        </motion.div>
                     </div>
                 </div>
             </section>
@@ -375,7 +503,7 @@ const LandingPage = () => {
                             <h4 className="font-black text-slate-900 mb-8 uppercase text-xs tracking-widest">Company</h4>
                             <ul className="space-y-4 text-slate-500 font-bold text-sm">
                                 <li><a href="#" className="hover:text-indigo-600 transition-colors">About Us</a></li>
-                                <li><a href="#" className="hover:text-indigo-600 transition-colors">Careers</a></li>
+                                <li><a href="#contact" className="hover:text-indigo-600 transition-colors">Contact</a></li>
                                 <li><a href="#" className="hover:text-indigo-600 transition-colors">Privacy Policy</a></li>
                                 <li><a href="#" className="hover:text-indigo-600 transition-colors">Terms of Service</a></li>
                             </ul>
@@ -393,7 +521,6 @@ const LandingPage = () => {
                         <p>© 2026 Integrated Pet Wellness. All rights reserved.</p>
                         <div className="flex gap-8 mt-4 md:mt-0">
                             <span>English (US)</span>
-                            <span>Made with ❤️ for Pets</span>
                         </div>
                     </div>
                 </div>

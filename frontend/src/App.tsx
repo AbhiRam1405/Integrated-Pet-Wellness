@@ -18,6 +18,7 @@ import InventoryManagement from './pages/admin/InventoryManagement'
 import SlotManagement from './pages/admin/SlotManagement'
 import AdminOrders from './pages/admin/AdminOrders'
 import AdminOrderDetails from './pages/admin/AdminOrderDetails'
+import ContactMessages from './pages/admin/ContactMessages'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import LandingPage from './pages/LandingPage'
@@ -25,8 +26,9 @@ import { useSelector, useDispatch } from 'react-redux'
 import type { RootState } from './store'
 import { logout, setUser } from './features/auth/authSlice'
 import { userApi } from './api/userApi'
-import { LogOut, Home, Calendar, ShoppingBag, Users, Package, Clock, Loader2, User } from 'lucide-react'
+import { LogOut, Home, Calendar, ShoppingBag, Users, Package, Clock, Loader2, User, MessageSquare } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { Toaster } from 'react-hot-toast'
 
 function App() {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
@@ -63,6 +65,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+      <Toaster position="top-center" reverseOrder={false} />
       {isAuthenticated && (
         <nav className="bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-40 backdrop-blur-md bg-white/80">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -85,6 +88,7 @@ function App() {
                     <Link to="/admin/orders" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><ShoppingBag size={18} /> Orders</Link>
                     <Link to="/admin/inventory" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><Package size={18} /> Inventory</Link>
                     <Link to="/admin/slots" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><Clock size={18} /> Slots</Link>
+                    <Link to="/admin/messages" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><MessageSquare size={18} /> Messages</Link>
                   </>
                 )}
               </div>
@@ -146,6 +150,7 @@ function App() {
           <Route path="/admin/slots" element={isAuthenticated && isAdmin ? <SlotManagement /> : <Navigate to="/dashboard" replace />} />
           <Route path="/admin/orders" element={isAuthenticated && isAdmin ? <AdminOrders /> : <Navigate to="/dashboard" replace />} />
           <Route path="/admin/orders/:id" element={isAuthenticated && isAdmin ? <AdminOrderDetails /> : <Navigate to="/dashboard" replace />} />
+          <Route path="/admin/messages" element={isAuthenticated && isAdmin ? <ContactMessages /> : <Navigate to="/dashboard" replace />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

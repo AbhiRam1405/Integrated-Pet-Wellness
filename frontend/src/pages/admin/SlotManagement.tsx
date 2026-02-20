@@ -6,6 +6,7 @@ import { ConsultationType } from '../../types/appointment';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Loader2, Calendar, Clock, Plus, Trash2, Video, MapPin, Stethoscope, X, Save } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function SlotManagement() {
     const [slots, setSlots] = useState<AppointmentSlotResponse[]>([]);
@@ -39,22 +40,52 @@ export default function SlotManagement() {
     const handleCreate = async () => {
         try {
             await adminApi.createSlot(formData);
-            alert('Slot created successfully!');
+            toast.success('Slot published successfully!');
             setIsAdding(false);
             loadSlots();
         } catch (err) {
-            alert('Failed to create slot.');
+            toast.error('Failed to create slot.');
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (window.confirm('Delete this slot?')) {
-            try {
-                await adminApi.deleteSlot(id);
-                setSlots(slots.filter(s => s.id !== id));
-            } catch (err) {
-                alert('Delete failed.');
-            }
+    const handleDelete = (id: string) => {
+        toast((t) => (
+            <div className="flex flex-col gap-2 p-1">
+                <div className="flex items-center gap-2 text-red-600 mb-1">
+                    <Trash2 size={18} />
+                    <span className="font-bold">Delete Slot?</span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                    Delete this appointment slot?
+                </p>
+                <div className="flex justify-end gap-2 mt-3">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 rounded-lg transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            await processDelete(id);
+                        }}
+                        className="px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
+    };
+
+    const processDelete = async (id: string) => {
+        try {
+            await adminApi.deleteSlot(id);
+            setSlots(prev => prev.filter(s => s.id !== id));
+            toast.success('Slot deleted successfully');
+        } catch (err) {
+            toast.error('Delete failed.');
         }
     };
 

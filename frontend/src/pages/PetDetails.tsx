@@ -5,6 +5,7 @@ import type { PetResponse } from '../types/pet';
 import { ArrowLeft, Dog, Calendar, Weight, Activity, Heart, Edit2, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/Button';
+import toast from 'react-hot-toast';
 
 export default function PetDetails() {
     const { id } = useParams<{ id: string }>();
@@ -31,14 +32,47 @@ export default function PetDetails() {
         fetchPetDetails();
     }, [id]);
 
-    const handleDelete = async (petId: string) => {
-        if (window.confirm('Are you sure you want to remove this pet?')) {
-            try {
-                await petApi.deletePet(petId);
-                navigate('/dashboard');
-            } catch (err) {
-                alert('Failed to delete pet.');
-            }
+    const handleDelete = () => {
+        if (!pet) return;
+
+        toast((t) => (
+            <div className="flex flex-col gap-2 p-1">
+                <div className="flex items-center gap-2 text-red-600 mb-1">
+                    <Trash2 size={18} />
+                    <span className="font-bold">Delete Pet?</span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                    Are you sure you want to remove {pet.name}? This action cannot be undone.
+                </p>
+                <div className="flex justify-end gap-2 mt-3">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 rounded-lg transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            await processDelete();
+                        }}
+                        className="px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
+    };
+
+    const processDelete = async () => {
+        if (!pet) return;
+        try {
+            await petApi.deletePet(pet.id);
+            toast.success('Pet deleted successfully');
+            navigate('/dashboard');
+        } catch (err) {
+            toast.error('Failed to delete pet.');
         }
     };
 
@@ -96,7 +130,7 @@ export default function PetDetails() {
                             <Button
                                 variant="outline"
                                 className="bg-white/10 border-white/20 text-white hover:bg-white/20 flex items-center gap-2"
-                                onClick={() => handleDelete(pet.id)}
+                                onClick={() => handleDelete()}
                             >
                                 <Trash2 size={18} />
                                 Delete

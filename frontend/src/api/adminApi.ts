@@ -69,4 +69,15 @@ export const adminApi = {
     deleteSlot: async (id: string) => {
         await api.delete(`/admin/appointments/slots/${id}`);
     },
+
+    // Contact Messages
+    getContactMessages: async () => {
+        const response = await api.get('/contact');
+        return response.data;
+    },
+
+    deleteContactMessage: async (id: string) => {
+        const response = await api.delete(`/contact/${id}`);
+        return response.data;
+    },
 };

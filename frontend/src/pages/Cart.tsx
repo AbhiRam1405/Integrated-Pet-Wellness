@@ -4,6 +4,7 @@ import type { CartResponse } from '../types/marketplace';
 import { Button } from '../components/Button';
 import { Loader2, Trash2, Plus, Minus, ShoppingBag, ArrowLeft, CreditCard, MapPin } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 export default function Cart() {
     const [cart, setCart] = useState<CartResponse | null>(null);
@@ -34,7 +35,7 @@ export default function Cart() {
             const updatedCart = await marketplaceApi.updateCartItem(itemId, { quantity });
             setCart(updatedCart);
         } catch (err) {
-            alert('Failed to update quantity.');
+            toast.error('Failed to update quantity.');
         }
     };
 
@@ -42,34 +43,65 @@ export default function Cart() {
         try {
             const updatedCart = await marketplaceApi.removeFromCart(itemId);
             setCart(updatedCart);
+            toast.success('Item removed from cart');
         } catch (err) {
-            alert('Failed to remove item.');
+            toast.error('Failed to remove item.');
         }
     };
 
-    const handleClearCart = async () => {
-        if (window.confirm('Empty your cart?')) {
-            try {
-                await marketplaceApi.clearCart();
-                setCart({ items: [], totalAmount: 0 });
-            } catch (err) {
-                alert('Failed to clear cart.');
-            }
+    const handleClearCart = () => {
+        toast((t) => (
+            <div className="flex flex-col gap-2 p-1">
+                <div className="flex items-center gap-2 text-red-600 mb-1">
+                    <Trash2 size={18} />
+                    <span className="font-bold">Empty Cart?</span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                    Are you sure you want to remove all items from your cart?
+                </p>
+                <div className="flex justify-end gap-2 mt-3">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 rounded-lg transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            await processClearCart();
+                        }}
+                        className="px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm"
+                    >
+                        Empty Cart
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
+    };
+
+    const processClearCart = async () => {
+        try {
+            await marketplaceApi.clearCart();
+            setCart({ items: [], totalAmount: 0 });
+            toast.success('Cart cleared');
+        } catch (err) {
+            toast.error('Failed to clear cart.');
         }
     };
 
     const handleCheckout = async () => {
         if (!address.trim()) {
-            alert('Please enter a shipping address.');
+            toast.error('Please enter a shipping address.');
             return;
         }
         try {
             setCheckoutLoading(true);
             await marketplaceApi.placeOrder({ shippingAddress: address });
-            alert('Order placed successfully!');
+            toast.success('Order placed successfully!');
             navigate('/marketplace/orders');
         } catch (err) {
-            alert('Failed to place order.');
+            toast.error('Failed to place order.');
         } finally {
             setCheckoutLoading(false);
         }

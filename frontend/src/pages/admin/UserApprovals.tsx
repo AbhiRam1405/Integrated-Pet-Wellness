@@ -5,6 +5,7 @@ import { Button } from '../../components/Button';
 import { Loader2, CheckCircle, UserCheck, Mail, Calendar, User, X, Phone, MapPin, Shield } from 'lucide-react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
+import toast from 'react-hot-toast';
 
 export default function UserApprovals() {
     const [allUsers, setAllUsers] = useState<UserProfileResponse[]>([]);
@@ -12,6 +13,9 @@ export default function UserApprovals() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [selectedUser, setSelectedUser] = useState<UserProfileResponse | null>(null);
+    const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+    const [rejectReason, setRejectReason] = useState('');
+    const [userToReject, setUserToReject] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'all'>('pending');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -68,28 +72,59 @@ export default function UserApprovals() {
                 u.username === username ? { ...u, isApproved: true } : u
             ));
 
-            alert('User approved successfully!');
+            toast.success(`User @${username} approved successfully!`);
         } catch (err) {
-            alert('Failed to approve user.');
+            toast.error('Failed to approve user.');
         } finally {
             setActionLoading(null);
         }
     };
 
-    const handleReject = async (username: string) => {
-        const reason = window.prompt(`Please provide a reason for rejecting @${username}:`);
+    const handleRejectClick = (username: string) => {
+        setUserToReject(username);
+        setRejectReason('');
+        setIsRejectModalOpen(true);
+    };
 
-        if (reason === null) return; // User cancelled the prompt
-
-        if (!reason.trim()) {
-            alert('A rejection reason is required.');
+    const confirmReject = async () => {
+        if (!userToReject || !rejectReason.trim()) {
+            toast.error('A rejection reason is required.');
             return;
         }
 
-        if (!window.confirm(`Are you sure you want to reject and delete @${username}? This action cannot be undone.`)) {
-            return;
-        }
+        setIsRejectModalOpen(false);
 
+        toast((t) => (
+            <div className="flex flex-col gap-2 p-1">
+                <div className="flex items-center gap-2 text-red-600 mb-1">
+                    <Shield size={18} />
+                    <span className="font-bold">Confirm Rejection</span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                    Are you sure you want to reject and delete <strong>@{userToReject}</strong>?
+                </p>
+                <div className="flex justify-end gap-2 mt-3">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 rounded-lg transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            await processReject(userToReject, rejectReason);
+                        }}
+                        className="px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm"
+                    >
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        ), { duration: 6000 });
+    };
+
+    const processReject = async (username: string, reason: string) => {
         try {
             setActionLoading(username);
             await adminApi.rejectUser(username, reason);
@@ -97,11 +132,12 @@ export default function UserApprovals() {
             // Remove from local state
             setAllUsers(prev => prev.filter(u => u.username !== username));
 
-            alert('User rejected and notified successfully.');
+            toast.success(`User @${username} rejected and notified.`);
         } catch (err) {
-            alert('Failed to reject user.');
+            toast.error('Failed to reject user.');
         } finally {
             setActionLoading(null);
+            setUserToReject(null);
         }
     };
 
@@ -229,7 +265,7 @@ export default function UserApprovals() {
                                     </Button>
                                     <Button
                                         variant="outline"
-                                        onClick={() => handleReject(user.username)}
+                                        onClick={() => handleRejectClick(user.username)}
                                         className="w-full border-red-50 text-red-400 font-bold hover:bg-red-50 hover:border-red-100"
                                     >
                                         Delete
@@ -365,7 +401,7 @@ export default function UserApprovals() {
                                                     variant="outline"
                                                     className="flex-1 border-red-50 text-red-400 font-bold hover:bg-red-50 hover:border-red-100"
                                                     onClick={() => {
-                                                        handleReject(selectedUser.username);
+                                                        handleRejectClick(selectedUser.username);
                                                         setSelectedUser(null);
                                                     }}
                                                 >
@@ -374,6 +410,80 @@ export default function UserApprovals() {
                                             </div>
                                         </div>
                                     )}
+                                </Dialog.Panel>
+                            </Transition.Child>
+                        </div>
+                    </div>
+                </Dialog>
+            </Transition>
+            {/* Rejection Modal */}
+            <Transition appear show={isRejectModalOpen} as={Fragment}>
+                <Dialog as="div" className="relative z-[60]" onClose={() => setIsRejectModalOpen(false)}>
+                    <Transition.Child
+                        as={Fragment}
+                        enter="ease-out duration-300"
+                        enterFrom="opacity-0"
+                        enterTo="opacity-100"
+                        leave="ease-in duration-200"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
+                    >
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" />
+                    </Transition.Child>
+
+                    <div className="fixed inset-0 overflow-y-auto">
+                        <div className="flex min-h-full items-center justify-center p-4 text-center">
+                            <Transition.Child
+                                as={Fragment}
+                                enter="ease-out duration-300"
+                                enterFrom="opacity-0 scale-95"
+                                enterTo="opacity-100 scale-100"
+                                leave="ease-in duration-200"
+                                leaveFrom="opacity-100 scale-100"
+                                leaveTo="opacity-0 scale-95"
+                            >
+                                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-[32px] bg-white p-8 text-left align-middle shadow-2xl transition-all border border-slate-100">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <Dialog.Title as="h3" className="text-xl font-black text-slate-900 flex items-center gap-3">
+                                            <div className="h-10 w-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center">
+                                                <X size={20} />
+                                            </div>
+                                            Reject User Registration
+                                        </Dialog.Title>
+                                        <button onClick={() => setIsRejectModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                            <X size={24} />
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <p className="text-sm font-medium text-slate-500 italic">
+                                            Please provide a reason why <strong>@{userToReject}</strong> is being rejected. This will be sent to their email.
+                                        </p>
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-black uppercase text-slate-400 tracking-widest ml-1">Rejection Reason</label>
+                                            <textarea
+                                                autoFocus
+                                                rows={4}
+                                                className="w-full rounded-2xl bg-slate-50 border-2 border-slate-100 p-4 text-sm font-medium focus:outline-none focus:border-red-500 transition-all resize-none"
+                                                placeholder="e.g. Incomplete profile details, invalid documents..."
+                                                value={rejectReason}
+                                                onChange={(e) => setRejectReason(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-8 flex gap-3">
+                                        <Button variant="ghost" className="flex-1 font-bold" onClick={() => setIsRejectModalOpen(false)}>
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            className="flex-1 shadow-lg shadow-red-100 bg-red-600 hover:bg-red-700 text-white border-none"
+                                            onClick={confirmReject}
+                                            disabled={!rejectReason.trim()}
+                                        >
+                                            Next Step
+                                        </Button>
+                                    </div>
                                 </Dialog.Panel>
                             </Transition.Child>
                         </div>

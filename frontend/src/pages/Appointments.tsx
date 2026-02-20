@@ -4,6 +4,7 @@ import type { AppointmentResponse } from '../types/appointment';
 import { Button } from '../components/Button';
 import { Calendar, Clock, Loader2, Stethoscope, Video, MapPin, ChevronRight, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 export default function Appointments() {
     const [appointments, setAppointments] = useState<AppointmentResponse[]>([]);
@@ -25,16 +26,46 @@ export default function Appointments() {
         }
     };
 
-    const handleCancelRequest = async (id: string) => {
-        if (window.confirm('Are you sure you want to cancel this appointment?')) {
-            try {
-                await appointmentApi.cancelAppointment(id);
-                setAppointments(appointments.map(app =>
-                    app.id === id ? { ...app, status: 'CANCELLED' as any } : app
-                ));
-            } catch (err) {
-                alert('Failed to cancel appointment.');
-            }
+    const handleCancelRequest = (id: string) => {
+        toast((t) => (
+            <div className="flex flex-col gap-2 p-1">
+                <div className="flex items-center gap-2 text-red-600 mb-1">
+                    <XCircle size={18} />
+                    <span className="font-bold">Cancel Appointment?</span>
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                    Are you sure you want to cancel this appointment?
+                </p>
+                <div className="flex justify-end gap-2 mt-3">
+                    <button
+                        onClick={() => toast.dismiss(t.id)}
+                        className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 bg-slate-100 rounded-lg transition-colors"
+                    >
+                        No, Keep it
+                    </button>
+                    <button
+                        onClick={async () => {
+                            toast.dismiss(t.id);
+                            await processCancel(id);
+                        }}
+                        className="px-3 py-1.5 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm"
+                    >
+                        Yes, Cancel
+                    </button>
+                </div>
+            </div>
+        ), { duration: 5000 });
+    };
+
+    const processCancel = async (id: string) => {
+        try {
+            await appointmentApi.cancelAppointment(id);
+            setAppointments(prev => prev.map(app =>
+                app.id === id ? { ...app, status: 'CANCELLED' as any } : app
+            ));
+            toast.success('Appointment cancelled successfully');
+        } catch (err) {
+            toast.error('Failed to cancel appointment.');
         }
     };
 

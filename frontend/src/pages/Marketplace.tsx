@@ -6,6 +6,7 @@ import { ProductCard } from '../components/ProductCard';
 import { Button } from '../components/Button';
 import { ShoppingCart, Search, Filter, Loader2, PackageX, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 export default function Marketplace() {
     const [products, setProducts] = useState<ProductResponse[]>([]);
@@ -56,9 +57,9 @@ export default function Marketplace() {
         try {
             setActionLoading(product.id);
             await marketplaceApi.addToCart({ productId: product.id, quantity: 1 });
-            alert(`${product.name} added to cart!`);
+            toast.success(`${product.name} added to cart!`);
         } catch (err) {
-            alert('Failed to add to cart.');
+            toast.error('Failed to add to cart.');
         } finally {
             setActionLoading(null);
         }
