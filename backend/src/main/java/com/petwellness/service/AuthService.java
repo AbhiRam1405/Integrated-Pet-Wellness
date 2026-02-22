@@ -107,9 +107,11 @@ public class AuthService {
         if (user.getRole() == Role.PET_OWNER) {
             // Strict checks for Pet Owner
             if (!Boolean.TRUE.equals(user.getIsEmailVerified())) {
+                System.out.println("❌ Login failed for " + user.getUsername() + ": Email not verified");
                 throw new org.springframework.security.access.AccessDeniedException("EMAIL_NOT_VERIFIED: Please verify your email address to continue.");
             }
             if (!Boolean.TRUE.equals(user.getIsApproved())) {
+                System.out.println("❌ Login failed for " + user.getUsername() + ": Account not approved");
                 throw new org.springframework.security.access.AccessDeniedException("APPROVAL_PENDING: Your account is awaiting administrator approval.");
             }
             // Note: Profile completion is NOT required for login
@@ -117,14 +119,17 @@ public class AuthService {
         } else {
             // Standard checks for other roles
             if (!Boolean.TRUE.equals(user.getIsEmailVerified())) {
+                System.out.println("❌ Login failed for " + user.getUsername() + ": Email not verified");
                 throw new BadRequestException("Please verify your email before logging in");
             }
             if (!Boolean.TRUE.equals(user.getIsApproved())) {
+                System.out.println("❌ Login failed for " + user.getUsername() + ": Account not approved");
                 throw new BadRequestException("Your account is pending administrator approval");
             }
         }
 
         String jwt = tokenProvider.generateToken(authentication);
+        System.out.println("✅ Login successful for " + user.getUsername() + " (Role: " + user.getRole() + ")");
 
         return AuthResponse.builder()
                 .token(jwt)
@@ -133,6 +138,7 @@ public class AuthService {
                 .email(user.getEmail())
                 .roles(java.util.List.of("ROLE_" + user.getRole().name()))
                 .message("Login successful")
+                .success(true)
                 .build();
     }
 

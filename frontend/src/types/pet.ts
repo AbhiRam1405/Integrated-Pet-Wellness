@@ -62,3 +62,27 @@ export interface HealthRecordResponse {
     createdAt: string;
     updatedAt: string;
 }
+
+export interface MedicalHistoryRequest {
+    petId: string;
+    visitDate: string;
+    doctorName: string;
+    diagnosis: string;
+    treatment: string;
+    notes?: string;
+    followUpDate?: string;
+}
+
+export interface MedicalHistoryResponse {
+    id: string;
+    petId: string;
+    visitDate: string;
+    doctorName: string;
+    diagnosis: string;
+    treatment: string;
+    notes: string;
+    followUpDate: string;
+    attachmentPath: string;
+    createdAt: string;
+    updatedAt: string;
+}

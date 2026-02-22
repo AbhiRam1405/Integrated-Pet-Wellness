@@ -132,11 +132,6 @@ export default function Dashboard() {
                     <p className="mt-1 text-slate-500 font-medium">Welcome back! Manage your pet family here.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Link to="/">
-                        <Button variant="ghost" className="flex items-center gap-2">
-                            View Site
-                        </Button>
-                    </Link>
                     <Link to="/pets/add">
                         <Button className="flex items-center gap-2" size="lg">
                             <Plus size={20} />

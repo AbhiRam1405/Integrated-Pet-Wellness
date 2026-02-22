@@ -5,6 +5,7 @@ import type { PetResponse } from '../types/pet';
 import { ArrowLeft, Dog, Calendar, Weight, Activity, Heart, Edit2, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/Button';
+import MedicalHistory from '../components/MedicalHistory';
 import toast from 'react-hot-toast';
 
 export default function PetDetails() {
@@ -107,7 +108,7 @@ export default function PetDetails() {
                 Back
             </button>
 
-            <div className="bg-white rounded-3xl shadow-xl shadow-slate-100 overflow-hidden ring-1 ring-slate-100">
+            <div className="bg-white rounded-3xl shadow-xl shadow-slate-100 overflow-hidden ring-1 ring-indigo-100">
                 {/* Header Section */}
                 <div className="bg-indigo-600 p-8 text-white relative overflow-hidden">
                     <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -186,6 +187,8 @@ export default function PetDetails() {
                         </div>
                     </div>
                 </div>
+
+                <MedicalHistory petId={pet.id} />
             </div>
         </div>
     );
