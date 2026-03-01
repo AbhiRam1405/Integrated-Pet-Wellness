@@ -17,13 +17,20 @@ Users can now manage a diverse collection of pets within a single account. The s
 - **Attributes Tracked**: Name, Breed, Age (years), Weight (kg), Gender, and Pet Type (Dog, Cat, etc.).
 - **Capabilities**: Add, Edit, and View detailed pet profiles.
 
+![Multi-Pet Registry User Interface](assets/screenshots/add-multiple-pets.png)
+
 ### 💉 2.2 Medical & Vaccination Tracking
 A centralized hub for all health-related activities.
 - **Medical History**: Stores chronological records of veterinary visits, including clinical diagnoses, treatments provided, and scheduled follow-up dates.
+
+![Medical History Chronological Records](assets/screenshots/medical-history.png)
+
 - **Vaccination Management**: 
     - Tracks specific vaccines and dose numbers.
     - **Dynamic Status Logic**: Automatically calculates status as **Upcoming**, **Completed**, or **Overdue** based on current date vs. next due date.
     - **Proof of Vaccination**: Supports file uploads (PDF/Images) for official vaccination certificates.
+
+![Vaccination Tracking and Status](assets/screenshots/vaccination-tracking.png)
 
 ### ⏰ 2.3 Automated Reminder System
 To improve pet health compliance, we implemented a background scheduling engine.
@@ -33,6 +40,8 @@ To improve pet health compliance, we implemented a background scheduling engine.
     - **Due Date**: Sends a final alert on the actual due date.
 - **Reliability**: Includes duplicate prevention to ensure owners aren't overwhelmed by multiple emails for the same record.
 
+![Vaccination and Appointment Reminder Notifications](assets/screenshots/reminder-emails.png)
+
 ### 📄 2.4 Health Reports (PDF)
 On-demand professional health documentation for sharing with veterinarians or for personal record-keeping.
 - **Generation**: Powered by the `ReportService` using the iText library.
@@ -40,6 +49,8 @@ On-demand professional health documentation for sharing with veterinarians or fo
     - **Pet Profile**: Summary of identity and physical traits.
     - **Medical Summary**: Table of past visits and treatments.
     - **Immunization Table**: List of vaccinations with status-based color coding (e.g., Red for Overdue).
+
+![Professional Pet Health Report PDF](assets/screenshots/health-report-pdf.png)
 
 ---
 
