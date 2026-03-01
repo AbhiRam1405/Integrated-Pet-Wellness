@@ -86,3 +86,46 @@ export interface MedicalHistoryResponse {
     createdAt: string;
     updatedAt: string;
 }
+
+export type VaccinationStatus = 'UPCOMING' | 'COMPLETED' | 'OVERDUE';
+
+export interface VaccinationRequest {
+    petId: string;
+    vaccineName: string;
+    doctorName: string;
+    givenDate: string;
+    nextDueDate: string;
+}
+
+export interface VaccinationResponse {
+    id: string;
+    petId: string;
+    vaccineName: string;
+    doctorName: string;
+    lastGivenDate: string | null;
+    givenDate: string;
+    nextDueDate: string;
+    status: VaccinationStatus;
+    doseNumber: number;
+    reminderSent: boolean;
+    reminderCount: number;
+    attachmentPath: string | null;
+    createdAt: string;
+}
+
+export interface VaccinationAudit {
+    id: string;
+    vaccinationId: string;
+    petId: string;
+    vaccineName: string;
+    doctorName: string;
+    lastGivenDate: string | null;
+    givenDate: string;
+    nextDueDate: string;
+    status: VaccinationStatus;
+    doseNumber: number;
+    revision: number;
+    revisionType: 'ADD' | 'MOD' | 'DEL';
+    revisionTimestamp: string;
+}
+

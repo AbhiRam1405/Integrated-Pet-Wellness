@@ -7,9 +7,12 @@ import { userApi } from '../api/userApi';
 import { setUser } from '../features/auth/authSlice';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
-import { Shield, User, Mail, Phone, MapPin, UserCheck, Clock, Loader2, Calendar, Lock } from 'lucide-react';
+import { Shield, User, Mail, Phone, MapPin, UserCheck, Clock, Loader2, Calendar, Lock, Globe, Building } from 'lucide-react';
 import type { UserProfileResponse } from '../types/user';
 import type { AppDispatch } from '../store';
+import { Country, State, City } from 'country-state-city';
+import { useMemo } from 'react';
+import { Select } from '../components/Select';
 
 const updateProfileSchema = z.object({
     firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -95,11 +98,28 @@ export default function Profile() {
     const {
         register: registerProfile,
         handleSubmit: handleSubmitProfile,
+        watch: watchProfile,
+        setValue: setValueProfile,
         formState: { errors: profileErrors },
         reset: resetProfile,
     } = useForm<UpdateProfileFormValues>({
         resolver: zodResolver(updateProfileSchema) as any,
     });
+
+    const selectedCountry = watchProfile('country');
+    const selectedState = watchProfile('state');
+
+    const countries = useMemo(() =>
+        Country.getAllCountries().map(c => ({ value: c.isoCode, label: c.name })),
+        []);
+
+    const states = useMemo(() =>
+        selectedCountry ? State.getStatesOfCountry(selectedCountry).map(s => ({ value: s.isoCode, label: s.name })) : [],
+        [selectedCountry]);
+
+    const cities = useMemo(() =>
+        (selectedCountry && selectedState) ? City.getCitiesOfState(selectedCountry, selectedState).map(c => ({ value: c.name, label: c.name })) : [],
+        [selectedCountry, selectedState]);
 
     const {
         register: registerPassword,
@@ -343,6 +363,31 @@ export default function Profile() {
                                     </div>
                                     <p className="mt-2 text-lg font-bold text-slate-900">{profile.address}</p>
                                 </div>
+                                <div className="rounded-xl border border-slate-200 p-4">
+                                    <div className="flex items-center gap-3 text-slate-500">
+                                        <Globe size={20} />
+                                        <span className="text-sm font-semibold">Country</span>
+                                    </div>
+                                    <p className="mt-2 text-lg font-bold text-slate-900">
+                                        {Country.getCountryByCode(profile.country || '')?.name || profile.country || 'N/A'}
+                                    </p>
+                                </div>
+                                <div className="rounded-xl border border-slate-200 p-4">
+                                    <div className="flex items-center gap-3 text-slate-500">
+                                        <Building size={20} />
+                                        <span className="text-sm font-semibold">State</span>
+                                    </div>
+                                    <p className="mt-2 text-lg font-bold text-slate-900">
+                                        {State.getStateByCodeAndCountry(profile.state || '', profile.country || '')?.name || profile.state || 'N/A'}
+                                    </p>
+                                </div>
+                                <div className="rounded-xl border border-slate-200 p-4">
+                                    <div className="flex items-center gap-3 text-slate-500">
+                                        <Building size={20} />
+                                        <span className="text-sm font-semibold">City</span>
+                                    </div>
+                                    <p className="mt-2 text-lg font-bold text-slate-900">{profile.city || 'N/A'}</p>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -393,23 +438,34 @@ export default function Profile() {
                                             error={profileErrors.address?.message}
                                             {...registerProfile('address')}
                                         />
-                                        <Input
-                                            label="City"
-                                            placeholder="New York"
-                                            error={profileErrors.city?.message}
-                                            {...registerProfile('city')}
-                                        />
-                                        <Input
-                                            label="State"
-                                            placeholder="NY"
-                                            error={profileErrors.state?.message}
-                                            {...registerProfile('state')}
-                                        />
-                                        <Input
+                                        <Select
                                             label="Country"
-                                            placeholder="USA"
+                                            options={countries}
                                             error={profileErrors.country?.message}
-                                            {...registerProfile('country')}
+                                            {...registerProfile('country', {
+                                                onChange: () => {
+                                                    setValueProfile('state', '');
+                                                    setValueProfile('city', '');
+                                                }
+                                            })}
+                                        />
+                                        <Select
+                                            label="State"
+                                            options={states}
+                                            error={profileErrors.state?.message}
+                                            disabled={!selectedCountry}
+                                            {...registerProfile('state', {
+                                                onChange: () => {
+                                                    setValueProfile('city', '');
+                                                }
+                                            })}
+                                        />
+                                        <Select
+                                            label="City"
+                                            options={cities}
+                                            error={profileErrors.city?.message}
+                                            disabled={!selectedState}
+                                            {...registerProfile('city')}
                                         />
                                         <Input
                                             label="Zip Code"

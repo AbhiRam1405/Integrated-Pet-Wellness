@@ -1,5 +1,4 @@
 import api from './axiosConfig';
-import type { MedicalHistoryResponse } from '../types/pet';
 
 export const medicalHistoryApi = {
     addMedicalHistory: async (formData: FormData) => {
@@ -11,8 +10,9 @@ export const medicalHistoryApi = {
         return response.data;
     },
 
-    getMedicalHistory: async (petId: string) => {
-        const response = await api.get<MedicalHistoryResponse[]>(`/medical-history/${petId}`);
+    getMedicalHistory: async (petId: string, page: number = 0, size: number = 15) => {
+        const response = await api.get<any>(`/medical-history/${petId}?page=${page}&size=${size}`);
         return response.data;
     },
+
 };

@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/api/medical-history")
@@ -54,12 +54,15 @@ public class MedicalHistoryController {
     }
 
     @GetMapping("/{petId}")
-    public ResponseEntity<List<MedicalHistoryResponse>> getHistory(
+    public ResponseEntity<Page<MedicalHistoryResponse>> getHistory(
             @PathVariable String petId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size,
             Authentication authentication) {
         String ownerId = getUserId(authentication);
-        return ResponseEntity.ok(medicalHistoryService.getHistoryByPet(petId, ownerId));
+        return ResponseEntity.ok(medicalHistoryService.getHistoryByPet(petId, ownerId, page, size));
     }
+
 
     private String getUserId(Authentication authentication) {
         User user = userRepository.findByUsername(authentication.getName())

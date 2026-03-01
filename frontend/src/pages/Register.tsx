@@ -5,8 +5,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../api/authApi';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
+import { Select } from '../components/Select';
 import { Dog, ArrowLeft } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { Country, State, City } from 'country-state-city';
 
 const registerSchema = z.object({
     username: z.string().min(3, 'Username must be at least 3 characters'),
@@ -55,14 +57,34 @@ export default function Register() {
     const {
         register,
         handleSubmit,
+        watch,
+        setValue,
         formState: { errors },
     } = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema) as any,
         defaultValues: {
             petCount: 0,
             experienceYears: 0,
+            country: '',
+            state: '',
+            city: '',
         }
     });
+
+    const selectedCountry = watch('country');
+    const selectedState = watch('state');
+
+    const countries = useMemo(() =>
+        Country.getAllCountries().map(c => ({ value: c.isoCode, label: c.name })),
+        []);
+
+    const states = useMemo(() =>
+        selectedCountry ? State.getStatesOfCountry(selectedCountry).map(s => ({ value: s.isoCode, label: s.name })) : [],
+        [selectedCountry]);
+
+    const cities = useMemo(() =>
+        (selectedCountry && selectedState) ? City.getCitiesOfState(selectedCountry, selectedState).map(c => ({ value: c.name, label: c.name })) : [],
+        [selectedCountry, selectedState]);
 
     const onSubmit = async (data: RegisterFormValues) => {
         try {
@@ -180,23 +202,34 @@ export default function Register() {
                             error={errors.address?.message}
                             {...register('address')}
                         />
-                        <Input
-                            label="City"
-                            placeholder="Animal City"
-                            error={errors.city?.message}
-                            {...register('city')}
-                        />
-                        <Input
-                            label="State"
-                            placeholder="State"
-                            error={errors.state?.message}
-                            {...register('state')}
-                        />
-                        <Input
+                        <Select
                             label="Country"
-                            placeholder="Country"
+                            options={countries}
                             error={errors.country?.message}
-                            {...register('country')}
+                            {...register('country', {
+                                onChange: () => {
+                                    setValue('state', '');
+                                    setValue('city', '');
+                                }
+                            })}
+                        />
+                        <Select
+                            label="State"
+                            options={states}
+                            error={errors.state?.message}
+                            disabled={!selectedCountry}
+                            {...register('state', {
+                                onChange: () => {
+                                    setValue('city', '');
+                                }
+                            })}
+                        />
+                        <Select
+                            label="City"
+                            options={cities}
+                            error={errors.city?.message}
+                            disabled={!selectedState}
+                            {...register('city')}
                         />
                         <Input
                             label="Zip Code"

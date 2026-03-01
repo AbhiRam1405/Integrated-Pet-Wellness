@@ -17,4 +17,6 @@ public interface AppointmentRepository extends MongoRepository<Appointment, Stri
     List<Appointment> findByPetId(String petId);
     
     List<Appointment> findBySlotId(String slotId);
+
+    List<Appointment> findByAppointmentDateBetween(java.time.LocalDate startDate, java.time.LocalDate endDate);
 }

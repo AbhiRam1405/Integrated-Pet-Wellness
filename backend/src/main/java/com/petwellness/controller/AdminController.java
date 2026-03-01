@@ -22,6 +22,8 @@ import java.util.List;
 public class AdminController {
 
     private final UserService userService;
+    private final com.petwellness.scheduler.VaccinationReminderScheduler vaccinationScheduler;
+    private final com.petwellness.scheduler.AppointmentReminderScheduler appointmentScheduler;
 
     @GetMapping("/users/pending")
     public ResponseEntity<List<UserProfileResponse>> getPendingUsers() {
@@ -45,5 +47,17 @@ public class AdminController {
             @Valid @RequestBody RejectionRequest request) {
         userService.rejectUserByUsername(username, request.getReason());
         return ResponseEntity.ok(new MessageResponse("User rejected and notified successfully", true));
+    }
+
+    @PostMapping("/reminders/vaccinations/trigger")
+    public ResponseEntity<MessageResponse> triggerVaccinationReminders() {
+        vaccinationScheduler.sendVaccinationReminders();
+        return ResponseEntity.ok(new MessageResponse("Vaccination reminders triggered successfully", true));
+    }
+
+    @PostMapping("/reminders/appointments/trigger")
+    public ResponseEntity<MessageResponse> triggerAppointmentReminders() {
+        appointmentScheduler.sendAppointmentReminders();
+        return ResponseEntity.ok(new MessageResponse("Appointment reminders triggered successfully", true));
     }
 }

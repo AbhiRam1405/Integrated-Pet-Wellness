@@ -12,8 +12,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import java.util.List;
 import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -56,9 +61,9 @@ public class MedicalHistoryService {
     }
 
     /**
-     * Get all medical history for a pet.
+     * Get all medical history for a pet with pagination.
      */
-    public List<MedicalHistoryResponse> getHistoryByPet(String petId, String ownerId) {
+    public Page<MedicalHistoryResponse> getHistoryByPet(String petId, String ownerId, int page, int size) {
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet not found with id: " + petId));
 
@@ -67,10 +72,13 @@ public class MedicalHistoryService {
             throw new UnauthorizedAccessException("You do not have permission to view history for this pet");
         }
 
-        return medicalHistoryRepository.findByPetIdOrderByVisitDateDesc(petId).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return medicalHistoryRepository.findByPetId(petId, pageable)
+                .map(this::mapToResponse);
     }
+
 
     private MedicalHistoryResponse mapToResponse(MedicalHistory history) {
         return MedicalHistoryResponse.builder()

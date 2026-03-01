@@ -137,7 +137,12 @@ export default function SlotManagement() {
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Date</label>
-                            <Input type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+                            <Input
+                                type="date"
+                                value={formData.date}
+                                min={new Date().toISOString().split('T')[0]}
+                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                            />
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Start Time</label>

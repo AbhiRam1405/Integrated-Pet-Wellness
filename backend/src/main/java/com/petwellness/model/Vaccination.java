@@ -6,47 +6,46 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 /**
- * Model representing a booked appointment by a user.
+ * Model representing a Pet Vaccination record.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "appointments")
-public class Appointment {
+@Document(collection = "vaccinations")
+public class Vaccination {
 
     @Id
     private String id;
 
     @Indexed
-    private String userId;
-
-    @Indexed
     private String petId;
 
+    private String vaccineName;
+
+    private LocalDate lastGivenDate;
+
+    private LocalDate givenDate;
+
+    private LocalDate nextDueDate;
+    
+    @Field("doctorName")
+    private String doctorName;
+
+    private int doseNumber;
+
     @Indexed
-    private String slotId;
-
-    private LocalDate appointmentDate;
-
-    private LocalTime appointmentTime;
-
-    private ConsultationType consultationType;
-
-    private String veterinarianName;
-
-    private AppointmentStatus status;
-
-    private String notes;
+    @Builder.Default
+    private VaccinationStatus status = VaccinationStatus.UPCOMING;
 
     @Builder.Default
     private boolean reminderSent = false;
@@ -59,9 +58,11 @@ public class Appointment {
 
     private LocalDate lastReminderDate;
 
+    private String attachmentPath;
+
     @CreatedDate
     private LocalDateTime createdAt;
 
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+    @Version
+    private Long version;
 }
