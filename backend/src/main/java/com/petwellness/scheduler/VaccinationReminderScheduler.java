@@ -43,18 +43,20 @@ public class VaccinationReminderScheduler {
 
         for (Vaccination v : vaccinations) {
             try {
+                // Null safety: Skip if nextDueDate is null
+                if (v.getNextDueDate() == null) {
+                    log.warn("Reminder skipped: nextDueDate is null | vaccinationId={}", v.getId());
+                    continue;
+                }
+
                 // Skip if not UPCOMING (Completed vaccinations don't need reminders)
                 if (v.getStatus() != VaccinationStatus.UPCOMING) {
                     continue;
                 }
 
-                // Skip if nextDueDate is null (Null safety)
-                if (v.getNextDueDate() == null) {
-                    continue;
-                }
-
                 // Duplicate prevention: Don't send more than one email per day for the same record
                 if (today.equals(v.getLastReminderDate())) {
+                    log.debug("Reminder already sent today: skipping | vaccinationId={} | date={}", v.getId(), today);
                     continue;
                 }
 
@@ -64,61 +66,83 @@ public class VaccinationReminderScheduler {
                 // A. 2-Day Reminder
                 if (today.equals(v.getNextDueDate().minusDays(2)) && !v.isReminderSent()) {
                     shouldSend = true;
-                    reminderType = "2-Day Reminder";
+                    reminderType = "2-day";
                     v.setReminderSent(true);
                 } 
                 // B. Due-Date Reminder
                 else if (today.equals(v.getNextDueDate()) && !v.isDueDateReminderSent()) {
                     shouldSend = true;
-                    reminderType = "Due-Date Reminder";
+                    reminderType = "due-date";
                     v.setDueDateReminderSent(true);
                 }
 
                 if (shouldSend) {
-                    sendReminderEmail(v, reminderType);
-                    v.setReminderCount(v.getReminderCount() + 1);
-                    v.setLastReminderDate(today);
-                    vaccinationRepository.save(v);
+                    boolean success = sendReminderEmail(v, reminderType);
+                    if (success) {
+                        v.setReminderCount(v.getReminderCount() + 1);
+                        v.setLastReminderDate(today);
+                        vaccinationRepository.save(v);
+                        log.info("Reminder sent | vaccinationId={} | petId={} | type={} | date={}", 
+                                v.getId(), v.getPetId(), reminderType, today);
+                    }
                 }
 
             } catch (Exception e) {
-                log.error("❌ Error processing reminder for vaccination ID: {}", v.getId(), e);
+                log.error("❌ Error processing reminder | vaccinationId={} | error={}", v.getId(), e.getMessage());
             }
         }
         log.info("✅ Vaccination reminder scheduler task completed.");
     }
 
-    private void sendReminderEmail(Vaccination v, String type) {
+    private boolean sendReminderEmail(Vaccination v, String type) {
         Pet pet = petRepository.findById(v.getPetId()).orElse(null);
         if (pet == null) {
-            log.warn("Pet not found for vaccination ID: {}. Skipping email.", v.getId());
-            return;
+            log.warn("Pet not found: skipping reminder | vaccinationId={} | petId={}", v.getId(), v.getPetId());
+            return false;
         }
 
         User owner = userRepository.findById(pet.getOwnerId()).orElse(null);
-        if (owner == null || owner.getEmail() == null) {
-            log.warn("Owner or email not found for pet ID: {}. Skipping email.", pet.getId());
-            return;
+        if (owner == null) {
+            log.warn("Owner not found: skipping reminder | vaccinationId={} | petId={} | ownerId={}", 
+                    v.getId(), pet.getId(), pet.getOwnerId());
+            return false;
         }
 
+        if (owner.getEmail() == null || owner.getEmail().trim().isEmpty()) {
+            log.warn("Owner email missing: skipping reminder | vaccinationId={} | ownerId={}", 
+                    v.getId(), owner.getId());
+            return false;
+        }
+
+        String displayName = (owner.getFirstName() != null && !owner.getFirstName().isEmpty()) 
+                             ? owner.getFirstName() : owner.getUsername();
+        
         String subject = "Vaccination Reminder – " + pet.getName();
+        String reminderTypeLabel = type.equals("2-day") ? "2-day reminder" : "scheduled due-date reminder";
+        
         String body = String.format(
             "Dear %s,\n\n" +
-            "This is a %s that your pet is due for a vaccination:\n\n" +
+            "This is a %s for your pet's upcoming vaccination:\n\n" +
             "Pet Name: %s\n" +
             "Vaccine: %s\n" +
             "Due Date: %s\n\n" +
-            "Please ensure your pet receives their vaccination on time to stay healthy.\n\n" +
+            "Please ensure your pet receives their vaccination on time to maintain optimal health.\n\n" +
             "Regards,\n" +
-            "Pet Wellness System",
-            owner.getFirstName() != null ? owner.getFirstName() : owner.getUsername(),
-            type.toLowerCase(),
+            "Pet Wellness Management System",
+            displayName,
+            reminderTypeLabel,
             pet.getName(),
             v.getVaccineName(),
             v.getNextDueDate()
         );
 
-        emailService.sendEmail(owner.getEmail(), subject, body);
-        log.info("📧 {} sent to {} for pet {}.", type, owner.getEmail(), pet.getName());
+        try {
+            emailService.sendEmail(owner.getEmail(), subject, body);
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to send email | vaccinationId={} | email={} | error={}", 
+                    v.getId(), owner.getEmail(), e.getMessage());
+            return false;
+        }
     }
 }

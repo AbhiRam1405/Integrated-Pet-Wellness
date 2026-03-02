@@ -1,11 +1,13 @@
 package com.petwellness.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class EmailService {
 
@@ -24,10 +26,10 @@ public class EmailService {
             message.setText(body);
             
             mailSender.send(message);
-            System.out.println("✅ Email sent successfully to: " + to);
+            log.info("📧 Email sent successfully to: {}", to);
         } catch (Exception e) {
-            System.err.println("❌ Failed to send email to: " + to);
-            e.printStackTrace();
+            log.error("❌ Failed to send email to: {} | error: {}", to, e.getMessage());
+            throw e; // Rethrow to allow caller to handle failure
         }
     }
 

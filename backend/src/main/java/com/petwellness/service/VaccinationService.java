@@ -72,6 +72,7 @@ public class VaccinationService {
                 .doseNumber(1) // Initial dose
                 .status(VaccinationStatus.UPCOMING) // Initial status in DB must be UPCOMING
                 .reminderSent(false)
+                .dueDateReminderSent(false)
                 .reminderCount(0)
                 .attachmentPath(attachmentPath)
                 .build();
@@ -142,7 +143,9 @@ public class VaccinationService {
         }
 
         vaccination.setReminderSent(false);
+        vaccination.setDueDateReminderSent(false);
         vaccination.setReminderCount(0);
+        vaccination.setLastReminderDate(null);
 
         Vaccination updated = vaccinationRepository.save(vaccination);
         return mapToResponse(updated);
@@ -180,6 +183,7 @@ public class VaccinationService {
                 .doseNumber(prevDose.getDoseNumber() + 1)
                 .status(VaccinationStatus.UPCOMING)
                 .reminderSent(false)
+                .dueDateReminderSent(false)
                 .reminderCount(0)
                 .build();
 
