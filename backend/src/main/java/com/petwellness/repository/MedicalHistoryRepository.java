@@ -28,5 +28,7 @@ public interface MedicalHistoryRepository extends MongoRepository<MedicalHistory
      * @return list of medical history records
      */
     List<MedicalHistory> findByPetIdOrderByVisitDateDesc(String petId);
+
+    void deleteByPetId(String petId);
 }
 

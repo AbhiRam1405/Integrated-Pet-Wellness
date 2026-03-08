@@ -132,6 +132,13 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
         user.setIsApproved(true);
         userRepository.save(user);
+        
+        // Send approval email
+        try {
+            emailService.sendApprovalEmail(user);
+        } catch (Exception e) {
+            System.err.println("Failed to send approval email: " + e.getMessage());
+        }
     }
 
     /**

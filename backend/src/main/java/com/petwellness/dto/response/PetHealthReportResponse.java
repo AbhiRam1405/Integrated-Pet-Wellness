@@ -20,6 +20,7 @@ public class PetHealthReportResponse {
     private PetInfo petInfo;
     private List<MedicalHistoryInfo> medicalHistory;
     private List<VaccinationInfo> vaccinations;
+    private List<AppointmentInfo> appointments;
 
     @Data
     @Builder
@@ -31,6 +32,18 @@ public class PetHealthReportResponse {
         private String age; // formatted age
         private String gender;
         private String ownerName;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AppointmentInfo {
+        private LocalDate appointmentDate;
+        private String appointmentTime;
+        private String veterinarianName;
+        private String consultationType;
+        private String status;
     }
 
     @Data

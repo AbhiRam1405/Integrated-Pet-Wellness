@@ -44,12 +44,15 @@ export interface AppointmentResponse {
     id: string;
     userId: string;
     petId: string;
+    petName: string;
     slotId: string;
     appointmentDate: string;
     appointmentTime: string;
     consultationType: ConsultationType;
     veterinarianName: string;
     status: AppointmentStatus;
+    ownerName: string;
+    ownerEmail: string;
     notes: string;
     createdAt: string;
     updatedAt: string;

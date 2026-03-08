@@ -7,6 +7,7 @@ import com.petwellness.model.*;
 import com.petwellness.repository.AppointmentRepository;
 import com.petwellness.repository.AppointmentSlotRepository;
 import com.petwellness.repository.PetRepository;
+import com.petwellness.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,8 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final AppointmentSlotRepository slotRepository;
     private final PetRepository petRepository;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
 
     /**
      * Book a new appointment.
@@ -46,6 +49,9 @@ public class AppointmentService {
             throw new RuntimeException("Unauthorized: This pet does not belong to you");
         }
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         // 3. Create Appointment
         Appointment appointment = Appointment.builder()
                 .userId(userId)
@@ -64,6 +70,15 @@ public class AppointmentService {
         slotRepository.save(slot);
 
         Appointment savedAppointment = appointmentRepository.save(appointment);
+
+        // Send confirmation email
+        try {
+            emailService.sendAppointmentBookingEmail(savedAppointment, user, pet.getName());
+        } catch (Exception e) {
+            // Log but don't fail the transaction just because email failed
+            System.err.println("Failed to send appointment confirmation email: " + e.getMessage());
+        }
+
         return mapToResponse(savedAppointment);
     }
 
@@ -130,10 +145,21 @@ public class AppointmentService {
      * Map entity to response DTO.
      */
     private AppointmentResponse mapToResponse(Appointment appointment) {
+        String petName = petRepository.findById(appointment.getPetId())
+                .map(Pet::getName)
+                .orElse("Unknown Pet");
+
+        User owner = userRepository.findById(appointment.getUserId()).orElse(null);
+        String ownerName = owner != null ? owner.getFirstName() + " " + owner.getLastName() : "Unknown Owner";
+        String ownerEmail = owner != null ? owner.getEmail() : "N/A";
+
         return AppointmentResponse.builder()
                 .id(appointment.getId())
                 .userId(appointment.getUserId())
                 .petId(appointment.getPetId())
+                .petName(petName)
+                .ownerName(ownerName)
+                .ownerEmail(ownerEmail)
                 .slotId(appointment.getSlotId())
                 .appointmentDate(appointment.getAppointmentDate())
                 .appointmentTime(appointment.getAppointmentTime())

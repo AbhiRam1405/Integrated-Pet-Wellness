@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { adminApi } from '../../api/adminApi';
 import type { UserProfileResponse } from '../../types/user';
 import { Button } from '../../components/Button';
-import { Loader2, CheckCircle, UserCheck, Mail, Calendar, User, X, Phone, MapPin, Shield } from 'lucide-react';
+import {
+    Loader2, CheckCircle, UserCheck, Mail, Calendar, User, X,
+    Phone, MapPin, Shield, Users, Clock, Facebook, Instagram, Twitter, Linkedin,
+    Briefcase, Heart, Globe
+} from 'lucide-react';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import toast from 'react-hot-toast';
@@ -37,6 +41,12 @@ export default function UserApprovals() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const stats = {
+        total: allUsers.length,
+        pending: allUsers.filter(u => !u.isApproved).length,
+        active: allUsers.filter(u => u.isApproved).length
     };
 
     const filterUsers = () => {
@@ -195,6 +205,37 @@ export default function UserApprovals() {
                 </div>
             </div>
 
+            {/* Stats Dashboard */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-5">
+                    <div className="h-14 w-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                        <Users size={28} />
+                    </div>
+                    <div>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Total Users</p>
+                        <p className="text-2xl font-black text-slate-900">{stats.total}</p>
+                    </div>
+                </div>
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-5">
+                    <div className="h-14 w-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
+                        <Clock size={28} />
+                    </div>
+                    <div>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Pending</p>
+                        <p className="text-2xl font-black text-slate-900">{stats.pending}</p>
+                    </div>
+                </div>
+                <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-5">
+                    <div className="h-14 w-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                        <CheckCircle size={28} />
+                    </div>
+                    <div>
+                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Approved</p>
+                        <p className="text-2xl font-black text-slate-900">{stats.active}</p>
+                    </div>
+                </div>
+            </div>
+
             {displayUsers.length === 0 ? (
                 <div className="bg-white rounded-3xl p-16 text-center shadow-sm ring-1 ring-slate-100 border-2 border-dashed border-slate-100">
                     <CheckCircle size={48} className="mx-auto text-green-500 mb-4 opacity-20" />
@@ -303,103 +344,207 @@ export default function UserApprovals() {
                                 leaveFrom="opacity-100 scale-100"
                                 leaveTo="opacity-0 scale-95"
                             >
-                                <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-[2.5rem] bg-white p-10 text-left align-middle shadow-2xl transition-all ring-1 ring-slate-100">
-                                    <div className="flex items-center justify-between mb-8">
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-14 w-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-100">
-                                                <User size={30} />
-                                            </div>
-                                            <div>
-                                                <Dialog.Title as="h3" className="text-2xl font-black text-slate-900">
-                                                    User Profile
-                                                </Dialog.Title>
-                                                <p className="text-slate-400 text-sm font-bold tracking-tight">Full account verification details</p>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => setSelectedUser(null)}
-                                            className="h-10 w-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all"
-                                        >
-                                            <X size={20} />
-                                        </button>
-                                    </div>
-
+                                <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-[2.5rem] bg-white p-0 text-left align-middle shadow-2xl transition-all ring-1 ring-slate-100">
                                     {selectedUser && (
-                                        <div className="space-y-8">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">First Name</p>
-                                                    <p className="text-slate-900 font-bold">{selectedUser.firstName || 'Not provided'}</p>
-                                                </div>
-                                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Last Name</p>
-                                                    <p className="text-slate-900 font-bold">{selectedUser.lastName || 'Not provided'}</p>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                <div className="flex items-center gap-4 p-4 rounded-2xl ring-1 ring-slate-100 bg-white shadow-sm">
-                                                    <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
-                                                        <Mail size={18} />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Email Address</p>
-                                                        <p className="text-slate-900 font-bold">{selectedUser.email}</p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center gap-4 p-4 rounded-2xl ring-1 ring-slate-100 bg-white shadow-sm">
-                                                    <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
-                                                        <Phone size={18} />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Phone Number</p>
-                                                        <p className="text-slate-900 font-bold">{selectedUser.phoneNumber || 'Not provided'}</p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center gap-4 p-4 rounded-2xl ring-1 ring-slate-100 bg-white shadow-sm">
-                                                    <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
-                                                        <MapPin size={18} />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Address</p>
-                                                        <p className="text-slate-900 font-bold">{selectedUser.address || 'Not provided'}</p>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center gap-4 p-4 rounded-2xl ring-1 ring-slate-100 bg-white shadow-sm">
-                                                    <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500">
-                                                        <Shield size={18} />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Profile Completion</p>
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="h-2 w-32 bg-slate-100 rounded-full overflow-hidden">
-                                                                <div
-                                                                    className="h-full bg-indigo-500 rounded-full transition-all duration-1000"
-                                                                    style={{ width: `${selectedUser.profileCompletion}%` }}
-                                                                />
-                                                            </div>
-                                                            <p className="text-slate-900 font-black text-sm">{selectedUser.profileCompletion}%</p>
+                                        <>
+                                            {/* Modal Header */}
+                                            <div className="bg-indigo-600 p-8 text-white">
+                                                <div className="flex items-center justify-between mb-6">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="h-16 w-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white shadow-inner">
+                                                            <User size={36} />
+                                                        </div>
+                                                        <div>
+                                                            <Dialog.Title as="h3" className="text-3xl font-black">
+                                                                {selectedUser.firstName} {selectedUser.lastName}
+                                                            </Dialog.Title>
+                                                            <p className="text-indigo-100 text-sm font-bold tracking-tight flex items-center gap-2">
+                                                                <Shield size={14} /> @{selectedUser.username} • {selectedUser.role}
+                                                            </p>
                                                         </div>
                                                     </div>
+                                                    <button
+                                                        onClick={() => setSelectedUser(null)}
+                                                        className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all"
+                                                    >
+                                                        <X size={20} />
+                                                    </button>
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center justify-between text-xs font-black uppercase tracking-widest text-indigo-100">
+                                                        <span>Profile Completion</span>
+                                                        <span>{selectedUser.profileCompletion}%</span>
+                                                    </div>
+                                                    <div className="h-2 w-full bg-indigo-900/30 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-white rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+                                                            style={{ width: `${selectedUser.profileCompletion}%` }}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <div className="pt-4 flex gap-3">
-                                                <Button
-                                                    className="flex-1 shadow-xl shadow-indigo-100"
-                                                    onClick={() => {
-                                                        handleApprove(selectedUser.username);
-                                                        setSelectedUser(null);
-                                                    }}
-                                                >
-                                                    Approve User
-                                                </Button>
+                                            {/* Modal Body */}
+                                            <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                                                {/* Contact & Personal */}
+                                                <section>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 flex items-center gap-2">
+                                                        <Mail size={12} className="text-indigo-500" /> Basic Information
+                                                    </h4>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Email Address</p>
+                                                            <p className="text-slate-900 font-bold truncate">{selectedUser.email}</p>
+                                                        </div>
+                                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Phone Number</p>
+                                                            <p className="text-slate-900 font-bold">{selectedUser.phoneNumber || 'Not provided'}</p>
+                                                        </div>
+                                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Date of Birth</p>
+                                                            <p className="text-slate-900 font-bold">{selectedUser.dateOfBirth ? new Date(selectedUser.dateOfBirth).toLocaleDateString() : 'Not provided'}</p>
+                                                        </div>
+                                                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Gender</p>
+                                                            <p className="text-slate-900 font-bold capitalize">{selectedUser.gender || 'Not specified'}</p>
+                                                        </div>
+                                                    </div>
+                                                </section>
+
+                                                {/* Address */}
+                                                <section>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 flex items-center gap-2">
+                                                        <MapPin size={12} className="text-indigo-500" /> Location Details
+                                                    </h4>
+                                                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-4">
+                                                        <div>
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Street Address</p>
+                                                            <p className="text-slate-900 font-bold">{selectedUser.address || 'Not provided'}</p>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                                            <div>
+                                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">City</p>
+                                                                <p className="text-slate-700 font-bold text-sm">{selectedUser.city || '—'}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">State</p>
+                                                                <p className="text-slate-700 font-bold text-sm">{selectedUser.state || '—'}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Country</p>
+                                                                <p className="text-slate-700 font-bold text-sm">{selectedUser.country || '—'}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Zip</p>
+                                                                <p className="text-slate-700 font-bold text-sm">{selectedUser.zipCode || '—'}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </section>
+
+                                                {/* Pet Details */}
+                                                <section>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 flex items-center gap-2">
+                                                        <Heart size={12} className="text-indigo-500" /> Professional & Pet Care
+                                                    </h4>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                                                        <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 flex items-center gap-3">
+                                                            <Briefcase size={20} className="text-indigo-600" />
+                                                            <div>
+                                                                <p className="text-[9px] font-black uppercase tracking-widest text-indigo-400">Experience</p>
+                                                                <p className="text-sm font-black text-indigo-900">{selectedUser.experienceYears || 0} Years</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 flex items-center gap-3">
+                                                            <User size={20} className="text-emerald-600" />
+                                                            <div>
+                                                                <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400">Total Pets</p>
+                                                                <p className="text-sm font-black text-emerald-900">{selectedUser.petCount || 0} Registered</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="bg-amber-50/50 p-4 rounded-2xl border border-amber-100 flex items-center gap-3">
+                                                            <Globe size={20} className="text-amber-600" />
+                                                            <div>
+                                                                <p className="text-[9px] font-black uppercase tracking-widest text-amber-400">Language</p>
+                                                                <p className="text-sm font-black text-amber-900">{selectedUser.preferredLanguage || 'English'}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Pet Preferences</p>
+                                                        <p className="text-sm font-medium text-slate-700 italic leading-relaxed">
+                                                            {selectedUser.petPreferences || 'No preferences specified.'}
+                                                        </p>
+                                                    </div>
+                                                </section>
+
+                                                {/* Social Links */}
+                                                <section>
+                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 flex items-center gap-2">
+                                                        <Globe size={12} className="text-indigo-500" /> Online Presence
+                                                    </h4>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                                            <Facebook size={16} className="text-blue-600" />
+                                                            <span className="text-xs font-bold text-slate-600 truncate">{selectedUser.facebookUrl ? 'Connected' : 'Not linked'}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                                            <Instagram size={16} className="text-pink-600" />
+                                                            <span className="text-xs font-bold text-slate-600 truncate">{selectedUser.instagramUrl ? 'Connected' : 'Not linked'}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                                            <Twitter size={16} className="text-sky-500" />
+                                                            <span className="text-xs font-bold text-slate-600 truncate">{selectedUser.twitterUrl ? 'Connected' : 'Not linked'}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+                                                            <Linkedin size={16} className="text-blue-700" />
+                                                            <span className="text-xs font-bold text-slate-600 truncate">{selectedUser.linkedinUrl ? 'Connected' : 'Not linked'}</span>
+                                                        </div>
+                                                    </div>
+                                                </section>
+
+                                                {/* Emergency Contact */}
+                                                <section className="bg-rose-50/30 p-6 rounded-[2.5rem] border border-rose-100">
+                                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-500 mb-4 flex items-center gap-2">
+                                                        <Phone size={12} className="text-rose-500 animate-pulse" /> Emergency Contact
+                                                    </h4>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                                        <div>
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Contact Name</p>
+                                                            <p className="text-slate-900 font-bold">{selectedUser.emergencyContactName || '—'}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Relationship</p>
+                                                            <p className="text-slate-900 font-bold">{selectedUser.emergencyContactRelationship || '—'}</p>
+                                                        </div>
+                                                        <div className="sm:col-span-2">
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Phone Number</p>
+                                                            <p className="text-slate-900 font-bold flex items-center gap-2">
+                                                                <Phone size={14} className="text-slate-300" />
+                                                                {selectedUser.emergencyContactPhone || 'Not provided'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </section>
+                                            </div>
+
+                                            {/* Modal Footer */}
+                                            <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
+                                                {!selectedUser.isApproved && (
+                                                    <Button
+                                                        className="flex-1 shadow-xl shadow-indigo-100 bg-indigo-600 hover:bg-indigo-700 h-12 rounded-2xl"
+                                                        onClick={() => {
+                                                            handleApprove(selectedUser.username);
+                                                            setSelectedUser(null);
+                                                        }}
+                                                    >
+                                                        Confirm Approval
+                                                    </Button>
+                                                )}
                                                 <Button
                                                     variant="outline"
-                                                    className="flex-1 border-red-50 text-red-400 font-bold hover:bg-red-50 hover:border-red-100"
+                                                    className="flex-1 border-slate-200 text-slate-600 font-bold hover:bg-white h-12 rounded-2xl"
                                                     onClick={() => {
                                                         handleRejectClick(selectedUser.username);
                                                         setSelectedUser(null);
@@ -408,7 +553,7 @@ export default function UserApprovals() {
                                                     Reject & Delete
                                                 </Button>
                                             </div>
-                                        </div>
+                                        </>
                                     )}
                                 </Dialog.Panel>
                             </Transition.Child>

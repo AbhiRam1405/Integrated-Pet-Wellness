@@ -3,6 +3,7 @@ export const ProductCategory = {
     MEDICINE: 'MEDICINE',
     ACCESSORIES: 'ACCESSORIES',
     GROOMING: 'GROOMING',
+    TOY: 'TOY',
     OTHER: 'OTHER',
 } as const;
 
@@ -31,6 +32,7 @@ export interface ProductResponse {
 }
 
 export interface CartItemResponse {
+    id: string;
     productId: string;
     productName: string;
     productPrice: number;
@@ -75,4 +77,25 @@ export interface UpdateCartItemRequest {
 
 export interface PlaceOrderRequest {
     shippingAddress: string;
+    phoneNumber?: string;
+    cartItemIds?: string[];
+}
+
+export interface CreatePaymentOrderRequest {
+    amount: number;
+}
+
+export interface VerifyPaymentRequest {
+    razorpayOrderId: string;
+    razorpayPaymentId: string;
+    razorpaySignature: string;
+    orderRequest: PlaceOrderRequest;
+}
+
+export interface PaymentResponse {
+    id: string;
+    razorpayOrderId: string;
+    amount: number;
+    currency: string;
+    status: string;
 }

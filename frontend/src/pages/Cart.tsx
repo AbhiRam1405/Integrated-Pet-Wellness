@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
 import { marketplaceApi } from '../api/marketplaceApi';
-import type { CartResponse } from '../types/marketplace';
+import type { CartResponse, CartItemResponse } from '../types/marketplace';
 import { Button } from '../components/Button';
 import { Loader2, Trash2, Plus, Minus, ShoppingBag, ArrowLeft, CreditCard, MapPin } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { paymentApi } from '../api/paymentApi';
+
+declare global {
+    interface Window {
+        Razorpay: any;
+    }
+}
 
 export default function Cart() {
     const [cart, setCart] = useState<CartResponse | null>(null);
@@ -12,6 +19,7 @@ export default function Cart() {
     const [checkoutLoading, setCheckoutLoading] = useState(false);
     const [address, setAddress] = useState('');
     const navigate = useNavigate();
+    const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
     useEffect(() => {
         loadCart();
@@ -22,11 +30,39 @@ export default function Cart() {
             setLoading(true);
             const data = await marketplaceApi.getCart();
             setCart(data);
+            if (data && data.items.length > 0) {
+                // Select all by default
+                setSelectedItems(data.items.map(item => item.id));
+            }
         } catch (err) {
             console.error('Failed to load cart', err);
         } finally {
             setLoading(false);
         }
+    };
+
+    const toggleItemSelection = (itemId: string) => {
+        setSelectedItems(prev =>
+            prev.includes(itemId)
+                ? prev.filter(id => id !== itemId)
+                : [...prev, itemId]
+        );
+    };
+
+    const toggleSelectAll = () => {
+        if (!cart) return;
+        if (selectedItems.length === cart.items.length) {
+            setSelectedItems([]);
+        } else {
+            setSelectedItems(cart.items.map((item: CartItemResponse) => item.id));
+        }
+    };
+
+    const calculateSelectedTotal = () => {
+        if (!cart) return 0;
+        return cart.items
+            .filter((item: CartItemResponse) => selectedItems.includes(item.id))
+            .reduce((total: number, item: CartItemResponse) => total + (item.productPrice * item.quantity), 0);
     };
 
     const handleUpdateQuantity = async (itemId: string, quantity: number) => {
@@ -43,6 +79,7 @@ export default function Cart() {
         try {
             const updatedCart = await marketplaceApi.removeFromCart(itemId);
             setCart(updatedCart);
+            setSelectedItems(prev => prev.filter(id => id !== itemId));
             toast.success('Item removed from cart');
         } catch (err) {
             toast.error('Failed to remove item.');
@@ -84,25 +121,85 @@ export default function Cart() {
         try {
             await marketplaceApi.clearCart();
             setCart({ items: [], totalAmount: 0 });
+            setSelectedItems([]);
             toast.success('Cart cleared');
         } catch (err) {
             toast.error('Failed to clear cart.');
         }
     };
 
-    const handleCheckout = async () => {
+    const handleCheckout = async (itemIds?: string[]) => {
+        const idsToCheckout = itemIds || selectedItems;
+        if (idsToCheckout.length === 0) {
+            toast.error('Please select at least one item to checkout.');
+            return;
+        }
         if (!address.trim()) {
             toast.error('Please enter a shipping address.');
             return;
         }
+
         try {
             setCheckoutLoading(true);
-            await marketplaceApi.placeOrder({ shippingAddress: address });
-            toast.success('Order placed successfully!');
-            navigate('/marketplace/orders');
-        } catch (err) {
-            toast.error('Failed to place order.');
-        } finally {
+
+            // 1. Create Order on Backend
+            const amount = calculateSelectedTotal();
+            const razorpayOrder = await paymentApi.createOrder({ amount });
+
+            // 2. Configure Razorpay Options
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YOUR_KEY_ID', // Use env var or placeholder
+                amount: razorpayOrder.amount * 100,
+                currency: razorpayOrder.currency,
+                name: 'Pet Wellness Marketplace',
+                description: 'Payment for Pet Supplies',
+                order_id: razorpayOrder.razorpayOrderId,
+                handler: async (response: any) => {
+                    try {
+                        setCheckoutLoading(true);
+                        // 3. Verify Payment and Place Final Order
+                        await paymentApi.verifyPayment({
+                            razorpayOrderId: response.razorpay_order_id,
+                            razorpayPaymentId: response.razorpay_payment_id,
+                            razorpaySignature: response.razorpay_signature,
+                            orderRequest: {
+                                shippingAddress: address,
+                                cartItemIds: idsToCheckout
+                            }
+                        });
+                        toast.success('Order placed successfully!');
+                        navigate('/marketplace/orders');
+                    } catch (err: any) {
+                        toast.error(err.response?.data?.message || 'Payment verification failed.');
+                    } finally {
+                        setCheckoutLoading(false);
+                    }
+                },
+                prefill: {
+                    name: 'Guest User',
+                    email: 'user@example.com',
+                },
+                theme: {
+                    color: '#4f46e5',
+                },
+                modal: {
+                    ondismiss: () => {
+                        setCheckoutLoading(false);
+                    }
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+
+            rzp.on('payment.failed', function (response: any) {
+                toast.error(`Payment failed: ${response.error.description}`);
+                setCheckoutLoading(false);
+            });
+
+            rzp.open();
+
+        } catch (err: any) {
+            toast.error('Failed to initiate payment.');
             setCheckoutLoading(false);
         }
     };
@@ -133,6 +230,8 @@ export default function Cart() {
         );
     }
 
+    const selectedTotal = calculateSelectedTotal();
+
     return (
         <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-10">
@@ -140,16 +239,35 @@ export default function Cart() {
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Shopping Cart</h1>
                     <p className="mt-1 text-slate-500 font-medium italic">You have {cart.items.length} items in your basket.</p>
                 </div>
-                <Button variant="ghost" onClick={handleClearCart} className="text-red-500 font-bold hover:bg-red-50">
-                    Clear All
-                </Button>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl ring-1 ring-slate-100 shadow-sm">
+                        <input
+                            type="checkbox"
+                            className="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer"
+                            checked={cart.items.length > 0 && selectedItems.length === cart.items.length}
+                            onChange={toggleSelectAll}
+                        />
+                        <span className="text-sm font-bold text-slate-600">Select All</span>
+                    </div>
+                    <Button variant="ghost" onClick={handleClearCart} className="text-red-500 font-bold hover:bg-red-50">
+                        Clear All
+                    </Button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 {/* Cart Items */}
                 <div className="lg:col-span-2 space-y-6">
-                    {cart.items.map((item: any) => (
-                        <div key={item.id} className="bg-white rounded-3xl p-6 shadow-sm ring-1 ring-slate-100 flex gap-6 items-center">
+                    {cart.items.map((item: CartItemResponse) => (
+                        <div key={item.id} className={`bg-white rounded-3xl p-6 shadow-sm ring-1 flex gap-6 items-center transition-all ${selectedItems.includes(item.id) ? 'ring-indigo-200 bg-indigo-50/10' : 'ring-slate-100'}`}>
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    className="h-6 w-6 rounded-lg border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer"
+                                    checked={selectedItems.includes(item.id)}
+                                    onChange={() => toggleItemSelection(item.id)}
+                                />
+                            </div>
                             <div className="h-24 w-24 bg-slate-50 rounded-2xl overflow-hidden shrink-0 ring-1 ring-slate-100">
                                 {item.productImageUrl ? (
                                     <img src={item.productImageUrl} alt={item.productName} className="h-full w-full object-cover" />
@@ -159,7 +277,7 @@ export default function Cart() {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <h3 className="text-lg font-bold text-slate-900 truncate">{item.productName}</h3>
-                                <p className="text-slate-500 font-bold text-sm mt-1">${item.productPrice.toFixed(2)} each</p>
+                                <p className="text-slate-500 font-bold text-sm mt-1">₹{item.productPrice.toFixed(2)} each</p>
                                 <div className="mt-4 flex items-center gap-4">
                                     <div className="flex items-center bg-slate-100 rounded-xl p-1 shrink-0">
                                         <button
@@ -182,10 +300,20 @@ export default function Cart() {
                                     >
                                         <Trash2 size={20} />
                                     </button>
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="ml-auto text-xs font-bold ring-1 ring-indigo-100 hover:ring-indigo-200"
+                                        onClick={() => handleCheckout([item.id])}
+                                        isLoading={checkoutLoading}
+                                    >
+                                        <CreditCard size={14} className="mr-1.5" />
+                                        Checkout
+                                    </Button>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="font-bold text-slate-900">₹{item.productPrice.toFixed(2)}</p>
+                                <p className="font-bold text-slate-900">₹{(item.productPrice * item.quantity).toFixed(2)}</p>
                             </div>
                         </div>
                     ))}
@@ -198,16 +326,34 @@ export default function Cart() {
 
                         <div className="space-y-4 mb-8">
                             <div className="flex justify-between text-slate-500 font-bold">
-                                <span>Subtotal</span>
-                                <span>₹{cart.totalAmount.toFixed(2)}</span>
+                                <span>Selected Items ({selectedItems.length})</span>
+                                <span>₹{selectedTotal.toFixed(2)}</span>
                             </div>
+
+                            {/* Detailed List of Selected Items */}
+                            {selectedItems.length > 0 && (
+                                <div className="py-2 px-3 bg-slate-50 rounded-2xl max-h-40 overflow-y-auto space-y-2 border border-slate-100 shadow-inner">
+                                    {cart.items
+                                        .filter((item: CartItemResponse) => selectedItems.includes(item.id))
+                                        .map((item: CartItemResponse) => (
+                                            <div key={item.id} className="flex justify-between items-center text-xs">
+                                                <span className="text-slate-600 font-medium truncate pr-4">
+                                                    {item.quantity}x {item.productName}
+                                                </span>
+                                                <span className="text-slate-400 shrink-0 font-bold">
+                                                    ₹{(item.productPrice * item.quantity).toFixed(2)}
+                                                </span>
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
                             <div className="flex justify-between text-slate-500 font-bold">
                                 <span>Shipping</span>
                                 <span className="text-green-600">FREE</span>
                             </div>
                             <div className="pt-4 border-t border-slate-100 flex justify-between items-center text-slate-900">
                                 <span className="text-lg font-bold">Total Amount</span>
-                                <span className="text-xl font-black text-indigo-600">₹{cart.totalAmount.toFixed(2)}</span>
+                                <span className="text-xl font-black text-indigo-600">₹{selectedTotal.toFixed(2)}</span>
                             </div>
                         </div>
 
@@ -229,11 +375,12 @@ export default function Cart() {
                             <Button
                                 className="w-full h-14 text-lg shadow-xl shadow-indigo-100"
                                 size="lg"
-                                onClick={handleCheckout}
+                                onClick={() => handleCheckout()}
                                 isLoading={checkoutLoading}
+                                disabled={selectedItems.length === 0}
                             >
                                 <CreditCard size={20} className="mr-3" />
-                                Checkout Now
+                                {selectedItems.length === cart.items.length ? 'Checkout All' : 'Checkout Selected'}
                             </Button>
 
                             <Link to="/marketplace" className="block text-center text-sm font-bold text-slate-400 hover:text-indigo-600 p-2 transition-colors">

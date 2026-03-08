@@ -1,7 +1,7 @@
 import api from './axiosConfig';
 import type { UserProfileResponse, MessageResponse } from '../types/user';
 import type { ProductResponse, ProductCategory } from '../types/marketplace';
-import type { AppointmentSlotResponse, ConsultationType } from '../types/appointment';
+import type { AppointmentSlotResponse, AppointmentResponse, ConsultationType } from '../types/appointment';
 
 export const adminApi = {
     // User Management
@@ -78,6 +78,12 @@ export const adminApi = {
 
     deleteContactMessage: async (id: string) => {
         const response = await api.delete(`/contact/${id}`);
+        return response.data;
+    },
+
+    // Appointment Monitoring
+    getAllAppointments: async () => {
+        const response = await api.get<AppointmentResponse[]>('/admin/appointments');
         return response.data;
     },
 };

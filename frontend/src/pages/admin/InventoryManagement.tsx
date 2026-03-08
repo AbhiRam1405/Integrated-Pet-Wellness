@@ -163,7 +163,7 @@ export default function InventoryManagement() {
                             </select>
                         </div>
                         <div className="space-y-1.5">
-                            <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Price ($)</label>
+                            <label className="text-xs font-black uppercase text-slate-400 tracking-widest">Price (₹)</label>
                             <Input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })} />
                         </div>
                         <div className="space-y-1.5">
@@ -228,7 +228,7 @@ export default function InventoryManagement() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-5">
-                                        <p className="font-black text-slate-900">${product.price.toFixed(2)}</p>
+                                        <p className="font-black text-slate-900">₹{product.price.toFixed(2)}</p>
                                     </td>
                                     <td className="px-6 py-5">
                                         <div className="flex items-center gap-2">

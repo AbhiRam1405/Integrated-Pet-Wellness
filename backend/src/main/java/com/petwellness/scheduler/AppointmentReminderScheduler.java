@@ -85,28 +85,7 @@ public class AppointmentReminderScheduler {
             return;
         }
 
-        String subject = "Appointment Reminder – " + pet.getName();
-        String body = String.format(
-            "Dear %s,\n\n" +
-            "This is a %s that your pet has an appointment scheduled:\n\n" +
-            "Pet Name: %s\n" +
-            "Veterinarian: %s\n" +
-            "Date: %s\n" +
-            "Time: %s\n" +
-            "Type: %s\n\n" +
-            "Please ensure you arrive on time for your consultation.\n\n" +
-            "Regards,\n" +
-            "Pet Wellness System",
-            owner.getFirstName() != null ? owner.getFirstName() : owner.getUsername(),
-            type.toLowerCase(),
-            pet.getName(),
-            appt.getVeterinarianName(),
-            appt.getAppointmentDate(),
-            appt.getAppointmentTime(),
-            appt.getConsultationType()
-        );
-
-        emailService.sendEmail(owner.getEmail(), subject, body);
+        emailService.sendReminderEmail(owner, pet, appt, type);
         log.info("📧 {} sent to {} for pet {}'s appointment.", type, owner.getEmail(), pet.getName());
     }
 }

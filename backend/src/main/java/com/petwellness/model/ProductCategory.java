@@ -5,7 +5,9 @@ package com.petwellness.model;
  */
 public enum ProductCategory {
     FOOD,
-    TOYS,
+    TOY,
     MEDICINE,
-    ACCESSORIES
+    ACCESSORIES,
+    GROOMING,
+    OTHER
 }

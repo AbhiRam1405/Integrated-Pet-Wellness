@@ -206,20 +206,7 @@ export default function MedicalHistory({ petId }: MedicalHistoryProps) {
             )}
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-50/80 border-b border-slate-200">
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Diagnosis</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Doctor</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Follow-up</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Action</th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
-                <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                <div className="max-h-[500px] overflow-auto custom-scrollbar">
                     {history.length === 0 ? (
                         <div className="p-12 text-center">
                             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-4">
@@ -229,6 +216,15 @@ export default function MedicalHistory({ petId }: MedicalHistoryProps) {
                         </div>
                     ) : (
                         <table className="w-full text-left border-collapse">
+                            <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
+                                <tr>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Diagnosis</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Doctor</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Follow-up</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Action</th>
+                                </tr>
+                            </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {history.map((record) => (
                                     <tr
@@ -236,6 +232,9 @@ export default function MedicalHistory({ petId }: MedicalHistoryProps) {
                                         onClick={() => setSelectedRecord(record)}
                                         className="group hover:bg-indigo-50/30 transition-colors cursor-pointer"
                                     >
+                                        <td className="px-6 py-4">
+                                            <span className="text-sm font-bold text-slate-900 line-clamp-1">{record.diagnosis}</span>
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2">
                                                 <Calendar size={14} className="text-slate-400" />
@@ -243,9 +242,6 @@ export default function MedicalHistory({ petId }: MedicalHistoryProps) {
                                                     {new Date(record.visitDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                 </span>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-sm font-bold text-slate-900 line-clamp-1">{record.diagnosis}</span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2">

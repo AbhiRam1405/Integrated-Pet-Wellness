@@ -227,6 +227,9 @@ public class AuthService {
         user.setOtp(null);
         user.setOtpExpiry(null);
         userRepository.save(user);
+
+        // Send Welcome Email
+        emailService.sendWelcomeEmail(user);
     }
 
     /**

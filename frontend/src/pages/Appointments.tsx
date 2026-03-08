@@ -147,8 +147,8 @@ export default function Appointments() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pet ID</p>
-                                        <p className="text-slate-700 font-bold italic">#{app.petId.substring(0, 8)}</p>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pet Name</p>
+                                        <p className="text-slate-700 font-bold italic">{app.petName}</p>
                                     </div>
                                 </div>
 

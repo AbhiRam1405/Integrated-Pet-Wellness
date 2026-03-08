@@ -23,12 +23,15 @@ public class AppointmentResponse {
     private String id;
     private String userId;
     private String petId;
+    private String petName;
     private String slotId;
     private LocalDate appointmentDate;
     private LocalTime appointmentTime;
     private ConsultationType consultationType;
     private String veterinarianName;
     private AppointmentStatus status;
+    private String ownerName;
+    private String ownerEmail;
     private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

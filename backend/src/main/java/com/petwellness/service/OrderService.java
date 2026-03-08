@@ -10,6 +10,7 @@ import com.petwellness.repository.CartItemRepository;
 import com.petwellness.repository.OrderItemRepository;
 import com.petwellness.repository.OrderRepository;
 import com.petwellness.repository.ProductRepository;
+import com.petwellness.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,15 +30,37 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final CartItemRepository cartRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
 
     /**
      * Place an order from the current cart.
      */
     @Transactional
     public OrderResponse placeOrder(PlaceOrderRequest request, String userId) {
-        List<CartItem> cartItems = cartRepository.findByUserId(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
+        List<CartItem> cartItems;
+        if (request.getCartItemIds() != null && !request.getCartItemIds().isEmpty()) {
+            cartItems = cartRepository.findAllById(request.getCartItemIds());
+            
+            // Validate that all items belong to the user
+            for (CartItem item : cartItems) {
+                if (!item.getUserId().equals(userId)) {
+                    throw new RuntimeException("Unauthorized: Cart item " + item.getId() + " does not belong to you");
+                }
+            }
+            
+            if (cartItems.size() != request.getCartItemIds().size()) {
+                throw new RuntimeException("One or more cart items were not found");
+            }
+        } else {
+            cartItems = cartRepository.findByUserId(userId);
+        }
+
         if (cartItems.isEmpty()) {
-            throw new RuntimeException("Cannot place order with an empty cart");
+            throw new RuntimeException("Cannot place order with an empty selection");
         }
 
         // 1. Calculate Total and Validate Stock
@@ -60,12 +83,14 @@ public class OrderService {
                 .totalAmount(totalAmount)
                 .status(OrderStatus.PENDING)
                 .shippingAddress(request.getShippingAddress())
-                .phoneNumber(request.getPhoneNumber())
+                .phoneNumber(request.getPhoneNumber() != null && !request.getPhoneNumber().trim().isEmpty() 
+                        ? request.getPhoneNumber() : user.getPhoneNumber())
                 .build();
 
         Order savedOrder = orderRepository.save(order);
 
         // 3. Create Order Items and Deduct Stock
+        List<OrderItem> savedItems = new java.util.ArrayList<>();
         for (CartItem item : cartItems) {
             Product product = productRepository.findById(item.getProductId()).get();
             
@@ -77,15 +102,24 @@ public class OrderService {
                     .priceAtPurchase(item.getProductPrice())
                     .subtotal(item.getProductPrice() * item.getQuantity())
                     .build();
-            orderItemRepository.save(orderItem);
+            savedItems.add(orderItemRepository.save(orderItem));
 
             // Deduct Stock
             product.setStockQuantity(product.getStockQuantity() - item.getQuantity());
             productRepository.save(product);
         }
 
-        // 4. Clear Cart
-        cartRepository.deleteByUserId(userId);
+        // 4. Remove Ordered Items from Cart
+        for (CartItem item : cartItems) {
+            cartRepository.deleteById(item.getId());
+        }
+
+        // Send Order Confirmation Email
+        try {
+            emailService.sendOrderBookingEmail(savedOrder, user, savedItems);
+        } catch (Exception e) {
+            System.err.println("Failed to send order confirmation email: " + e.getMessage());
+        }
 
         return getOrderById(savedOrder.getId(), userId, true);
     }
@@ -121,9 +155,19 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
 
+        User user = userRepository.findById(order.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + order.getUserId()));
+
         order.setStatus(request.getStatus());
         Order updatedOrder = orderRepository.save(order);
         
+        // Send Status Update Email
+        try {
+            emailService.sendOrderStatusUpdateEmail(updatedOrder, user);
+        } catch (Exception e) {
+            System.err.println("Failed to send order status update email: " + e.getMessage());
+        }
+
         return getOrderById(updatedOrder.getId(), order.getUserId(), true);
     }
 
@@ -189,7 +233,8 @@ public class OrderService {
                 .totalAmount(order.getTotalAmount())
                 .status(order.getStatus())
                 .shippingAddress(order.getShippingAddress())
-                .phoneNumber(order.getPhoneNumber())
+                .phoneNumber(order.getPhoneNumber() != null ? order.getPhoneNumber() : 
+                        userRepository.findById(order.getUserId()).map(User::getPhoneNumber).orElse("N/A"))
                 .items(itemResponses)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 /**
  * Request DTO for placing a marketplace order.
@@ -19,4 +20,6 @@ public class PlaceOrderRequest {
     private String shippingAddress;
 
     private String phoneNumber;
+    
+    private List<String> cartItemIds;
 }

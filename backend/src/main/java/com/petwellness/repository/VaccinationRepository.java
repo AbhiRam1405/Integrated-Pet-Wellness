@@ -37,4 +37,6 @@ public interface VaccinationRepository extends MongoRepository<Vaccination, Stri
     List<Vaccination> findByNextDueDateBetween(LocalDate startDate, LocalDate endDate);
 
     List<Vaccination> findByPetIdOrderByDoseNumberDesc(String petId);
+
+    void deleteByPetId(String petId);
 }

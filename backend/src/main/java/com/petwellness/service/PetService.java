@@ -6,6 +6,9 @@ import com.petwellness.exception.ResourceNotFoundException;
 import com.petwellness.model.Pet;
 import com.petwellness.repository.PetRepository;
 import com.petwellness.repository.HealthRecordRepository;
+import com.petwellness.repository.AppointmentRepository;
+import com.petwellness.repository.VaccinationRepository;
+import com.petwellness.repository.MedicalHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +25,9 @@ public class PetService {
 
     private final PetRepository petRepository;
     private final HealthRecordRepository healthRecordRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final VaccinationRepository vaccinationRepository;
+    private final MedicalHistoryRepository medicalHistoryRepository;
 
     /**
      * Register a new pet.
@@ -87,7 +93,7 @@ public class PetService {
     }
 
     /**
-     * Delete a pet and its associated health records.
+     * Delete a pet and all its associated data (Cascade Delete).
      */
     @Transactional
     public void deletePet(String id, String ownerId) {
@@ -99,7 +105,13 @@ public class PetService {
             throw new RuntimeException("Unauthorized: You do not own this pet");
         }
 
+        // Cascade delete all related data
+        appointmentRepository.deleteByPetId(id);
+        vaccinationRepository.deleteByPetId(id);
+        medicalHistoryRepository.deleteByPetId(id);
         healthRecordRepository.deleteByPetId(id);
+        
+        // Finally, delete the pet itself
         petRepository.delete(pet);
     }
 
