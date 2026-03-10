@@ -226,9 +226,13 @@ public class OrderService {
                         .build())
                 .collect(Collectors.toList());
 
+        User user = userRepository.findById(order.getUserId()).orElse(null);
+        String customerName = (user != null) ? (user.getFirstName() + " " + user.getLastName()).trim() : "Unknown";
+
         return OrderResponse.builder()
                 .id(order.getId())
                 .userId(order.getUserId())
+                .customerName(customerName)
                 .orderDate(order.getOrderDate())
                 .totalAmount(order.getTotalAmount())
                 .status(order.getStatus())

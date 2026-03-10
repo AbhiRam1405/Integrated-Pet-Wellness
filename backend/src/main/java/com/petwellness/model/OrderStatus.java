@@ -5,7 +5,7 @@ package com.petwellness.model;
  */
 public enum OrderStatus {
     PENDING,
-    CONFIRMED,
+    PROCESSING,
     SHIPPED,
     DELIVERED,
     CANCELLED

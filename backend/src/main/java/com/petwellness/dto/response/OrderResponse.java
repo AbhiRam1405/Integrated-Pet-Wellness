@@ -20,6 +20,7 @@ public class OrderResponse {
 
     private String id;
     private String userId;
+    private String customerName;
     private LocalDateTime orderDate;
     private Double totalAmount;
     private OrderStatus status;

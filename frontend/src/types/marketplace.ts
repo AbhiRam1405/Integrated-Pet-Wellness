@@ -57,6 +57,7 @@ export interface OrderItemResponse {
 export interface OrderResponse {
     id: string;
     userId: string;
+    customerName: string;
     items: OrderItemResponse[];
     totalAmount: number;
     status: OrderStatus;

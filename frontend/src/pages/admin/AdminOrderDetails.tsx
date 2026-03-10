@@ -10,6 +10,7 @@ export default function AdminOrderDetails() {
     const [order, setOrder] = useState<OrderResponse | null>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
+    const [pendingStatus, setPendingStatus] = useState<string | null>(null);
 
     useEffect(() => {
         if (id) {
@@ -34,6 +35,7 @@ export default function AdminOrderDetails() {
 
         try {
             setUpdating(true);
+            setPendingStatus(newStatus);
             await marketplaceApi.updateOrderStatus(id, newStatus);
             toast.success(`Order status updated to ${newStatus}`);
             // Reload to get updated state
@@ -42,6 +44,7 @@ export default function AdminOrderDetails() {
             toast.error('Failed to update status');
         } finally {
             setUpdating(false);
+            setPendingStatus(null);
         }
     };
 
@@ -83,11 +86,14 @@ export default function AdminOrderDetails() {
                                 key={status}
                                 disabled={updating}
                                 onClick={() => handleStatusUpdate(status)}
-                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${order.status === status
+                                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-2 ${order.status === status
                                     ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200'
                                     : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200'
                                     }`}
                             >
+                                {updating && pendingStatus === status && (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                )}
                                 {status.charAt(0) + status.slice(1).toLowerCase()}
                             </button>
                         ))}
@@ -138,7 +144,11 @@ export default function AdminOrderDetails() {
                         </div>
                         <div className="p-6 space-y-4">
                             <div>
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">User ID</label>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Customer Name</label>
+                                <p className="font-medium text-slate-800">{order.customerName}</p>
+                            </div>
+                            <div>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Reference ID</label>
                                 <p className="text-sm font-mono bg-slate-50 p-2 rounded border border-slate-200 overflow-hidden text-ellipsis">{order.userId}</p>
                             </div>
                         </div>

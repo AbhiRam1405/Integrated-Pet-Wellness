@@ -5,7 +5,7 @@ import type { ProductResponse } from '../../types/marketplace';
 import { ProductCategory } from '../../types/marketplace';
 import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
-import { Loader2, Package, Plus, Trash2, Edit3, Save, X, AlertCircle } from 'lucide-react';
+import { Loader2, Package, Plus, Trash2, Edit3, Save, X, AlertCircle, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function InventoryManagement() {
@@ -13,6 +13,8 @@ export default function InventoryManagement() {
     const [loading, setLoading] = useState(true);
     const [isAdding, setIsAdding] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [search, setSearch] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('ALL');
 
     // Form states for adding/editing
     const [formData, setFormData] = useState<any>({
@@ -112,6 +114,13 @@ export default function InventoryManagement() {
         setIsAdding(true);
     };
 
+    const filteredProducts = products.filter(product => {
+        const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) ||
+            product.id.toLowerCase().includes(search.toLowerCase());
+        const matchesCategory = categoryFilter === 'ALL' || product.category === categoryFilter;
+        return matchesSearch && matchesCategory;
+    });
+
     if (loading) {
         return (
             <div className="flex min-h-[400px] items-center justify-center">
@@ -134,6 +143,34 @@ export default function InventoryManagement() {
                     <Plus size={20} />
                     New Product
                 </Button>
+            </div>
+
+            {/* Filters Bar */}
+            <div className="bg-white p-4 rounded-[2.5rem] shadow-sm ring-1 ring-slate-100 mb-8 flex flex-col md:flex-row gap-6 items-center justify-between">
+                <div className="relative w-full md:w-96">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input
+                        type="text"
+                        placeholder="Search by Product Name or ID..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 transition-all placeholder:text-slate-400"
+                    />
+                </div>
+                <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 no-scrollbar">
+                    {['ALL', ...Object.values(ProductCategory)].map((cat) => (
+                        <button
+                            key={cat}
+                            onClick={() => setCategoryFilter(cat)}
+                            className={`px-5 py-2.5 rounded-2xl text-xs font-black transition-all whitespace-nowrap uppercase tracking-widest ${categoryFilter === cat
+                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
+                                : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                                }`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {isAdding && (
@@ -209,41 +246,52 @@ export default function InventoryManagement() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {products.map((product) => (
-                                <tr key={product.id} className="hover:bg-slate-50/50 transition-colors group">
-                                    <td className="px-6 py-5">
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-12 w-12 bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center text-slate-400">
-                                                {product.imageUrl ? <img src={product.imageUrl} className="h-full w-full object-cover" /> : <Package size={20} />}
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-slate-900 line-clamp-1">{product.name}</p>
-                                                <p className="text-xs font-medium text-slate-400 italic">ID: {product.id.substring(0, 8)}</p>
-                                            </div>
+                            {filteredProducts.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-20 text-center">
+                                        <div className="flex flex-col items-center gap-3 text-slate-400 font-medium italic">
+                                            <Search size={40} className="mb-2 opacity-20" />
+                                            <p>No products found matching your filters.</p>
                                         </div>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
-                                            {product.category}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <p className="font-black text-slate-900">₹{product.price.toFixed(2)}</p>
-                                    </td>
-                                    <td className="px-6 py-5">
-                                        <div className="flex items-center gap-2">
-                                            {product.stockQuantity < 5 ? <AlertCircle size={14} className="text-red-500" /> : null}
-                                            <span className={`font-bold ${product.stockQuantity < 5 ? 'text-red-500' : 'text-slate-600'}`}>
-                                                {product.stockQuantity} units
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-5 text-right space-x-2">
-                                        <button onClick={() => startEdit(product)} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><Edit3 size={20} /></button>
-                                        <button onClick={() => handleDelete(product.id)} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={20} /></button>
                                     </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                filteredProducts.map((product) => (
+                                    <tr key={product.id} className="hover:bg-slate-50/50 transition-colors group">
+                                        <td className="px-6 py-5">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-12 w-12 bg-slate-100 rounded-xl overflow-hidden flex items-center justify-center text-slate-400">
+                                                    {product.imageUrl ? <img src={product.imageUrl} className="h-full w-full object-cover" /> : <Package size={20} />}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-slate-900 line-clamp-1">{product.name}</p>
+                                                    <p className="text-xs font-medium text-slate-400 italic">ID: {product.id.substring(0, 8)}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                                                {product.category}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <p className="font-black text-slate-900">₹{product.price.toFixed(2)}</p>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="flex items-center gap-2">
+                                                {product.stockQuantity < 5 ? <AlertCircle size={14} className="text-red-500" /> : null}
+                                                <span className={`font-bold ${product.stockQuantity < 5 ? 'text-red-500' : 'text-slate-600'}`}>
+                                                    {product.stockQuantity} units
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5 text-right space-x-2">
+                                            <button onClick={() => startEdit(product)} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><Edit3 size={20} /></button>
+                                            <button onClick={() => handleDelete(product.id)} className="p-2 text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={20} /></button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>

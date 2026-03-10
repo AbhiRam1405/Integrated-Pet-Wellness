@@ -12,6 +12,45 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Dialog, Transition } from '@headlessui/react';
 
+const PRINT_STYLES = `
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        .print-only {
+            display: block !important;
+        }
+        #invoice-modal {
+            position: static !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            transform: none !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        .print-scroll-reset {
+            max-height: none !important;
+            overflow: visible !important;
+        }
+        /* Hide scrollbars during print */
+        ::-webkit-scrollbar {
+            display: none !important;
+        }
+        * {
+            -ms-overflow-style: none !important;
+            scrollbar-width: none !important;
+        }
+        @page {
+            margin: 1.5cm;
+        }
+    }
+    .print-only {
+        display: none;
+    }
+`;
+
 const STATUS_CONFIG = {
     [OrderStatus.PENDING]: {
         label: 'Pending',
@@ -55,7 +94,10 @@ export default function OrderHistory() {
         try {
             setLoading(true);
             const data = await marketplaceApi.getMyOrders();
-            setOrders(data);
+            const sortedData = [...data].sort((a, b) =>
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            setOrders(sortedData);
         } catch (err) {
             console.error('Failed to load orders', err);
             toast.error('Failed to load order history');
@@ -132,7 +174,7 @@ export default function OrderHistory() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 no-print">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                 <div>
@@ -158,8 +200,8 @@ export default function OrderHistory() {
                                 key={status}
                                 onClick={() => setActiveFilter(status)}
                                 className={`px-5 py-2.5 rounded-2xl text-sm font-black transition-all whitespace-nowrap ${activeFilter === status
-                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-                                        : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+                                    : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
                                     }`}
                             >
                                 {status.charAt(0) + status.slice(1).toLowerCase()}
@@ -305,11 +347,28 @@ export default function OrderHistory() {
                                 leaveFrom="opacity-100 scale-100"
                                 leaveTo="opacity-0 scale-95"
                             >
-                                <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-[3rem] bg-white text-left align-middle shadow-2xl transition-all ring-1 ring-slate-100">
+                                <Dialog.Panel id="invoice-modal" className="w-full max-w-4xl transform overflow-hidden rounded-[3rem] bg-white text-left align-middle shadow-2xl transition-all ring-1 ring-slate-100">
+                                    <style>{PRINT_STYLES}</style>
                                     {selectedOrder && (
                                         <>
+                                            {/* Print Header */}
+                                            <div className="print-only mb-12 border-b-2 border-slate-900 pb-8 text-center">
+                                                <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase mb-2">PetWellness - Invoice</h1>
+                                                <p className="text-sm font-bold text-slate-500 italic tracking-widest mb-4">Premium Pet Care & Supplies</p>
+                                                <div className="flex justify-between items-end text-left pt-4">
+                                                    <div>
+                                                        <p className="text-xs font-black uppercase text-slate-400 tracking-widest mb-1">Customer</p>
+                                                        <p className="text-lg font-bold text-slate-900">{selectedOrder.customerName}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-xs font-black uppercase text-slate-400 tracking-widest mb-1">Order ID</p>
+                                                        <p className="text-sm font-mono font-bold text-slate-900">{selectedOrder.id}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             {/* Modal Header */}
-                                            <div className="border-b border-slate-50 bg-slate-50/30 p-8 flex items-center justify-between">
+                                            <div className="border-b border-slate-50 bg-slate-50/30 p-8 flex items-center justify-between no-print">
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-14 w-14 bg-white rounded-2xl shadow-sm flex items-center justify-center text-indigo-600">
                                                         <ShoppingBag size={24} />
@@ -327,7 +386,7 @@ export default function OrderHistory() {
                                                 </button>
                                             </div>
 
-                                            <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
+                                            <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar print-scroll-reset">
                                                 {/* Top Info Bar */}
                                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                                     <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 hover:border-indigo-100 transition-colors">
@@ -423,7 +482,7 @@ export default function OrderHistory() {
                                                 </div>
 
                                                 {/* Quick Actions */}
-                                                <div className="flex flex-wrap items-center justify-between gap-4 pt-4">
+                                                <div className="flex flex-wrap items-center justify-between gap-4 pt-4 no-print">
                                                     <div className="flex items-center gap-3">
                                                         <Button variant="ghost" className="rounded-2xl gap-2 font-black text-indigo-600 hover:bg-indigo-50">
                                                             <ArrowUpRight size={18} /> Track Package
@@ -447,7 +506,7 @@ export default function OrderHistory() {
                                             </div>
 
                                             {/* Modal Footer */}
-                                            <div className="border-t border-slate-50 p-8 flex justify-end gap-4 bg-slate-50/10">
+                                            <div className="border-t border-slate-50 p-8 flex justify-end gap-4 bg-slate-50/10 no-print">
                                                 <Button
                                                     variant="secondary"
                                                     onClick={() => setSelectedOrder(null)}

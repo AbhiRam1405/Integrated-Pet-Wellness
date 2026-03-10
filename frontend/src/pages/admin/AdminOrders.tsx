@@ -19,7 +19,10 @@ export default function AdminOrders() {
         try {
             setLoading(true);
             const data = await marketplaceApi.getAllOrders();
-            setOrders(data);
+            const sortedData = [...data].sort((a, b) =>
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            setOrders(sortedData);
         } catch (err) {
             console.error('Failed to load orders', err);
         } finally {
@@ -29,7 +32,7 @@ export default function AdminOrders() {
 
     const filteredOrders = orders.filter(order => {
         const matchessearch = order.id.toLowerCase().includes(search.toLowerCase()) ||
-            order.userId.toLowerCase().includes(search.toLowerCase());
+            order.customerName.toLowerCase().includes(search.toLowerCase());
         const matchesFilter = filter === 'ALL' || order.status === filter;
         return matchessearch && matchesFilter;
     });
@@ -67,7 +70,7 @@ export default function AdminOrders() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                         type="text"
-                        placeholder="Search by Order ID or User ID..."
+                        placeholder="Search by Order ID or Customer Name..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
@@ -117,7 +120,7 @@ export default function AdminOrders() {
                                             <span className="text-sm font-bold text-indigo-600">#{order.id.substring(0, 8)}...</span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                                            {order.userId.substring(0, 15)}...
+                                            {order.customerName}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                                             {new Date(order.createdAt).toLocaleDateString()}
