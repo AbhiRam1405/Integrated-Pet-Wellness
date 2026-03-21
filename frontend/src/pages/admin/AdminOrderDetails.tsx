@@ -4,6 +4,7 @@ import { marketplaceApi } from '../../api/marketplaceApi';
 import type { OrderResponse } from '../../types/marketplace';
 import { Loader2, ArrowLeft, Package, MapPin, Phone, User } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatTime12h } from '../../utils/dateUtils';
 
 export default function AdminOrderDetails() {
     const { id } = useParams<{ id: string }>();
@@ -76,7 +77,7 @@ export default function AdminOrderDetails() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Order #{order.id.substring(0, 8)}</h1>
-                    <p className="text-slate-500 mt-1">Placed on {new Date(order.createdAt).toLocaleString()}</p>
+                    <p className="text-slate-500 mt-1">Placed on {new Date(order.createdAt).toLocaleDateString()} {formatTime12h(order.createdAt)}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <span className="text-sm font-bold text-slate-500 mr-2">Update Status:</span>

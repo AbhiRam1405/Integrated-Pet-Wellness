@@ -22,6 +22,7 @@ public class AppointmentReminderScheduler {
     private final PetRepository petRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final com.petwellness.service.AppointmentService appointmentService;
 
     /**
      * Runs every day at 9 AM to send appointment reminders.
@@ -70,6 +71,21 @@ public class AppointmentReminderScheduler {
             }
         }
         log.info("✅ Appointment reminder scheduler task completed.");
+    }
+
+    /**
+     * Runs every hour to mark past appointments as COMPLETED.
+     * Cron: 0 0 * * * ?
+     */
+    @Scheduled(cron = "0 0 * * * ?")
+    public void updatePastAppointmentStatuses() {
+        log.info("⏰ Starting scheduled task to update past appointment statuses...");
+        try {
+            appointmentService.updatePastAppointments();
+        } catch (Exception e) {
+            log.error("❌ Error during scheduled appointment status update", e);
+        }
+        log.info("✅ Scheduled task to update past appointment statuses completed.");
     }
 
     private void sendReminderEmail(Appointment appt, String type) {

@@ -54,6 +54,13 @@ export interface OrderItemResponse {
     subtotal: number;
 }
 
+export interface TrackingEvent {
+    status: string;
+    location: string;
+    message: string;
+    timestamp: string;
+}
+
 export interface OrderResponse {
     id: string;
     userId: string;
@@ -63,9 +70,13 @@ export interface OrderResponse {
     status: OrderStatus;
     shippingAddress: string;
     phoneNumber: string;
+    trackingId?: string;
+    carrier?: string;
+    trackingHistory?: TrackingEvent[];
     createdAt: string;
     updatedAt: string;
 }
+
 
 export interface AddToCartRequest {
     productId: string;

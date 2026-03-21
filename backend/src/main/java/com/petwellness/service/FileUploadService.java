@@ -45,7 +45,8 @@ public class FileUploadService {
                 Files.createDirectories(root);
             }
 
-            String filename = UUID.randomUUID().toString() + "_" + originalFilename;
+            String slugifiedName = originalFilename.replaceAll("[^a-zA-Z0-9.-]", "_");
+            String filename = UUID.randomUUID().toString() + "_" + slugifiedName;
             Files.copy(file.getInputStream(), root.resolve(filename));
             
             return uploadDir + filename;

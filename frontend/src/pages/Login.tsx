@@ -43,7 +43,21 @@ export default function Login() {
                 navigate('/dashboard');
             }
         } catch (err: any) {
-            dispatch(loginFailure(err.response?.data?.message || 'Login failed. Please check your credentials.'));
+            // Backend returns ErrorResponse { status, message, timestamp }
+            const backendMessage = err.response?.data?.message;
+            const httpStatus = err.response?.status;
+
+            let displayMessage: string;
+            if (backendMessage) {
+                displayMessage = backendMessage;
+            } else if (httpStatus === 401) {
+                displayMessage = 'Invalid username/email or password. Please try again.';
+            } else if (httpStatus === 403) {
+                displayMessage = 'Access denied. Please contact support.';
+            } else {
+                displayMessage = 'Login failed. Please try again.';
+            }
+            dispatch(loginFailure(displayMessage));
         }
     };
 
@@ -69,16 +83,26 @@ export default function Login() {
                 </div>
 
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-                    {error && (
-                        <div className={`rounded-xl p-4 text-sm font-medium ${error.includes('pending')
-                            ? 'bg-amber-50 text-amber-700 border border-amber-100 flex gap-3 items-center'
-                            : 'bg-red-50 text-red-600 flex gap-3 items-center'
+                    {error && (() => {
+                        const isEmailNotVerified = error.includes('EMAIL_NOT_VERIFIED');
+                        const isPendingApproval = error.includes('APPROVAL_PENDING') || error.includes('pending');
+                        const isWarning = isEmailNotVerified || isPendingApproval;
+                        
+                        // Clean up the prefixed codes to show a readable message
+                        const displayError = error
+                            .replace('EMAIL_NOT_VERIFIED: ', '')
+                            .replace('APPROVAL_PENDING: ', '');
+
+                        return (
+                            <div className={`rounded-xl p-4 text-sm font-medium flex gap-3 items-start ${isWarning
+                                ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                                : 'bg-red-50 text-red-700 border border-red-100'
                             }`}>
-                            <div className={`h-2 w-2 rounded-full shrink-0 ${error.includes('pending') ? 'bg-amber-400' : 'bg-red-400'
-                                }`} />
-                            {error}
-                        </div>
-                    )}
+                                <div className={`h-2 w-2 rounded-full shrink-0 mt-1.5 ${isWarning ? 'bg-amber-400' : 'bg-red-400'}`} />
+                                <span>{displayError}</span>
+                            </div>
+                        );
+                    })()}
 
                     <div className="space-y-4">
                         <Input

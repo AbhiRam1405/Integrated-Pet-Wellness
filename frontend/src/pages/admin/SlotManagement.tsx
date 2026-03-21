@@ -7,6 +7,7 @@ import { Button } from '../../components/Button';
 import { Input } from '../../components/Input';
 import { Loader2, Calendar, Clock, Plus, Trash2, Video, MapPin, Stethoscope, X, Save, User as UserIcon, Mail, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatTime12h } from '../../utils/dateUtils';
 
 export default function SlotManagement() {
     const [slots, setSlots] = useState<AppointmentSlotResponse[]>([]);
@@ -22,6 +23,7 @@ export default function SlotManagement() {
         veterinarianName: '',
         duration: 30
     });
+    const [editingSlotId, setEditingSlotId] = useState<string | null>(null);
 
     useEffect(() => {
         if (activeView === 'slots') {
@@ -60,11 +62,48 @@ export default function SlotManagement() {
         try {
             await adminApi.createSlot(formData);
             toast.success('Slot published successfully!');
-            setIsAdding(false);
+            resetForm();
             loadSlots();
         } catch (err) {
             toast.error('Failed to create slot.');
         }
+    };
+
+    const handleUpdate = async () => {
+        if (!editingSlotId) return;
+        try {
+            await adminApi.updateSlot(editingSlotId, formData);
+            toast.success('Slot updated successfully!');
+            resetForm();
+            loadSlots();
+        } catch (err) {
+            toast.error('Failed to update slot.');
+        }
+    };
+
+    const handleEdit = (slot: AppointmentSlotResponse) => {
+        setFormData({
+            date: slot.date,
+            time: slot.time.substring(0, 5),
+            consultationType: slot.consultationType,
+            veterinarianName: slot.veterinarianName,
+            duration: slot.duration || 30
+        });
+        setEditingSlotId(slot.id);
+        setIsAdding(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const resetForm = () => {
+        setFormData({
+            date: '',
+            time: '',
+            consultationType: 'IN_CLINIC' as ConsultationType,
+            veterinarianName: '',
+            duration: 30
+        });
+        setIsAdding(false);
+        setEditingSlotId(null);
     };
 
     const handleDelete = (id: string) => {
@@ -164,8 +203,10 @@ export default function SlotManagement() {
             {isAdding && activeView === 'slots' && (
                 <div className="bg-white rounded-3xl p-8 shadow-2xl ring-1 ring-slate-100 mb-10 border-2 border-indigo-100">
                     <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-xl font-bold text-slate-900">Configure Appointment Slot</h2>
-                        <button onClick={() => setIsAdding(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
+                        <h2 className="text-xl font-bold text-slate-900">
+                            {editingSlotId ? 'Edit Appointment Slot' : 'Configure Appointment Slot'}
+                        </h2>
+                        <button onClick={resetForm} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -203,10 +244,10 @@ export default function SlotManagement() {
                     </div>
 
                     <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end gap-3">
-                        <Button variant="ghost" className="font-bold" onClick={() => setIsAdding(false)}>Cancel</Button>
-                        <Button onClick={handleCreate} className="px-10 shadow-lg shadow-indigo-100">
+                        <Button variant="ghost" className="font-bold" onClick={resetForm}>Cancel</Button>
+                        <Button onClick={editingSlotId ? handleUpdate : handleCreate} className="px-10 shadow-lg shadow-indigo-100">
                             <Save size={18} className="mr-2" />
-                            Publish Slot
+                            {editingSlotId ? 'Save Changes' : 'Publish Slot'}
                         </Button>
                     </div>
                 </div>
@@ -241,15 +282,22 @@ export default function SlotManagement() {
                                         <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Schedule</p>
                                         <div className="flex items-center gap-4 text-slate-700 font-bold text-sm">
                                             <span className="flex items-center gap-2"><Calendar size={16} className="text-indigo-400" /> {slot.date}</span>
-                                            <span className="flex items-center gap-2"><Clock size={16} className="text-indigo-400" /> {slot.time.substring(0, 5)}</span>
+                                            <span className="flex items-center gap-2"><Clock size={16} className="text-indigo-400" /> {formatTime12h(slot.time)}</span>
                                         </div>
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Status</p>
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${slot.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                            }`}>
-                                            {slot.status}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${slot.status === 'AVAILABLE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                }`}>
+                                                {slot.status}
+                                            </span>
+                                            {slot.status === 'AVAILABLE' && new Date(`${slot.date}T${slot.time}`) < new Date() && (
+                                                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-700 border border-amber-200">
+                                                    EXPIRED
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -262,7 +310,14 @@ export default function SlotManagement() {
                                             <Trash2 size={20} />
                                         </button>
                                     )}
-                                    <Button variant="ghost" size="sm" className="font-bold">Edit Details</Button>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="font-bold"
+                                        onClick={() => handleEdit(slot)}
+                                    >
+                                        Edit Details
+                                    </Button>
                                 </div>
                             </div>
                         ))

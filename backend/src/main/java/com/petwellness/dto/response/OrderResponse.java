@@ -27,6 +27,10 @@ public class OrderResponse {
     private String shippingAddress;
     private String phoneNumber;
     private List<OrderItemResponse> items;
+    private String trackingId;
+    private String carrier;
+    private List<com.petwellness.model.TrackingEvent> trackingHistory;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
+

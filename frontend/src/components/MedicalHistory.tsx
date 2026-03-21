@@ -6,6 +6,7 @@ import { Button } from './Button';
 import { Input } from './Input';
 import toast from 'react-hot-toast';
 import { Pagination } from './Pagination';
+import { formatTime12h } from '../utils/dateUtils';
 
 
 interface MedicalHistoryProps {
@@ -354,11 +355,11 @@ export default function MedicalHistory({ petId }: MedicalHistoryProps) {
 
                             <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-slate-100">
                                 <div className="text-xs text-slate-400 font-medium">
-                                    Created on {new Date(selectedRecord.createdAt).toLocaleString()}
+                                    Created on {new Date(selectedRecord.createdAt).toLocaleDateString()} {formatTime12h(selectedRecord.createdAt)}
                                 </div>
                                 {selectedRecord.attachmentPath && (
                                     <a
-                                        href={`http://localhost:8080/${selectedRecord.attachmentPath}`}
+                                        href={`/${selectedRecord.attachmentPath}`}
                                         target="_blank"
                                         rel="noreferrer"
                                         className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"

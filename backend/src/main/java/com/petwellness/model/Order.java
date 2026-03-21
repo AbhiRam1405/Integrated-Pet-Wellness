@@ -11,6 +11,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
 
 /**
  * Model representing a user's order in the marketplace.
@@ -38,9 +40,16 @@ public class Order {
 
     private String phoneNumber;
 
+    private String trackingId;
+
+    private String carrier;
+
+    private List<TrackingEvent> trackingHistory;
+
     @CreatedDate
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
 }
+

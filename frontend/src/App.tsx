@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, Link } from 'react-router-dom'
+import { Routes, Route, Navigate, Link, NavLink } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
@@ -77,18 +77,18 @@ function App() {
               <div className="hidden md:flex items-center gap-6">
                 {!isAdmin ? (
                   <>
-                    <Link to="/dashboard" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><Home size={18} /> Dashboard</Link>
-                    <Link to="/appointments" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><Calendar size={18} /> Appointments</Link>
-                    <Link to="/marketplace" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><ShoppingBag size={18} /> Shop</Link>
-                    <Link to="/profile" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><User size={18} /> Profile</Link>
+                    <NavLink to="/dashboard" className={({isActive}) => `text-sm font-bold flex items-center gap-2 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-600 hover:text-indigo-600'}`}><Home size={18} /> Dashboard</NavLink>
+                    <NavLink to="/appointments" className={({isActive}) => `text-sm font-bold flex items-center gap-2 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-600 hover:text-indigo-600'}`}><Calendar size={18} /> Appointments</NavLink>
+                    <NavLink to="/marketplace" className={({isActive}) => `text-sm font-bold flex items-center gap-2 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-600 hover:text-indigo-600'}`}><ShoppingBag size={18} /> Shop</NavLink>
+                    <NavLink to="/profile" className={({isActive}) => `text-sm font-bold flex items-center gap-2 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-600 hover:text-indigo-600'}`}><User size={18} /> Profile</NavLink>
                   </>
                 ) : (
                   <>
-                    <Link to="/admin/approvals" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><Users size={18} /> User Approvals</Link>
-                    <Link to="/admin/orders" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><ShoppingBag size={18} /> Orders</Link>
-                    <Link to="/admin/inventory" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><Package size={18} /> Inventory</Link>
-                    <Link to="/admin/slots" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><Clock size={18} /> Slots</Link>
-                    <Link to="/admin/messages" className="text-sm font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2"><MessageSquare size={18} /> Messages</Link>
+                    <NavLink to="/admin/approvals" className={({isActive}) => `text-sm font-bold flex items-center gap-2 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-600 hover:text-indigo-600'}`}><Users size={18} /> User Approvals</NavLink>
+                    <NavLink to="/admin/orders" className={({isActive}) => `text-sm font-bold flex items-center gap-2 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-600 hover:text-indigo-600'}`}><ShoppingBag size={18} /> Orders</NavLink>
+                    <NavLink to="/admin/inventory" className={({isActive}) => `text-sm font-bold flex items-center gap-2 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-600 hover:text-indigo-600'}`}><Package size={18} /> Inventory</NavLink>
+                    <NavLink to="/admin/slots" className={({isActive}) => `text-sm font-bold flex items-center gap-2 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-600 hover:text-indigo-600'}`}><Clock size={18} /> Slots</NavLink>
+                    <NavLink to="/admin/messages" className={({isActive}) => `text-sm font-bold flex items-center gap-2 transition-colors ${isActive ? 'text-indigo-600' : 'text-slate-600 hover:text-indigo-600'}`}><MessageSquare size={18} /> Messages</NavLink>
                   </>
                 )}
               </div>

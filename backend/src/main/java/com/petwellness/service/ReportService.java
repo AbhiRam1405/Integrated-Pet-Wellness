@@ -41,7 +41,7 @@ public class ReportService {
 
         List<MedicalHistory> medicalHistories = medicalHistoryRepository.findByPetIdOrderByVisitDateDesc(petId);
         List<Vaccination> vaccinations = vaccinationRepository.findByPetIdOrderByDoseNumberDesc(petId);
-        List<Appointment> appointments = appointmentRepository.findByPetId(petId);
+        List<Appointment> appointments = appointmentRepository.findByPetIdOrderByAppointmentDateDescAppointmentTimeDesc(petId);
 
         PetHealthReportResponse reportData = assembleReportData(pet, owner, medicalHistories, vaccinations, appointments);
         return generatePdf(reportData);

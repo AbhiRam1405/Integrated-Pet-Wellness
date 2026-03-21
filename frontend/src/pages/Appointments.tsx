@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { appointmentApi } from '../api/appointmentApi';
+import { formatTime12h } from '../utils/dateUtils';
 import type { AppointmentResponse } from '../types/appointment';
 import { Button } from '../components/Button';
 import { Calendar, Clock, Loader2, Stethoscope, Video, MapPin, ChevronRight, XCircle } from 'lucide-react';
@@ -18,7 +19,12 @@ export default function Appointments() {
         try {
             setLoading(true);
             const data = await appointmentApi.getMyAppointments();
-            setAppointments(data);
+            const sortedData = [...data].sort((a, b) => {
+                const dateA = new Date(`${a.appointmentDate}T${a.appointmentTime}`);
+                const dateB = new Date(`${b.appointmentDate}T${b.appointmentTime}`);
+                return dateB.getTime() - dateA.getTime();
+            });
+            setAppointments(sortedData);
         } catch (err) {
             console.error('Failed to load appointments', err);
         } finally {
@@ -123,11 +129,20 @@ export default function Appointments() {
                                     <div>
                                         <div className="flex flex-wrap items-center gap-3 mb-1.5">
                                             <h3 className="text-xl font-bold text-slate-900">{app.veterinarianName}</h3>
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${app.status === 'SCHEDULED' ? 'bg-indigo-100 text-indigo-700' :
-                                                app.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                                }`}>
-                                                {app.status}
-                                            </span>
+                                            {(() => {
+                                                const appointmentDate = new Date(`${app.appointmentDate}T${app.appointmentTime}`);
+                                                const now = new Date();
+                                                const isPast = appointmentDate < now;
+                                                const displayStatus = (app.status === 'SCHEDULED' && isPast) ? 'COMPLETED' : app.status;
+
+                                                return (
+                                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${displayStatus === 'SCHEDULED' ? 'bg-indigo-100 text-indigo-700' :
+                                                        displayStatus === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                        }`}>
+                                                        {displayStatus}
+                                                    </span>
+                                                );
+                                            })()}
                                         </div>
                                         <div className="flex items-center text-slate-500 font-bold text-sm">
                                             <span className="flex items-center gap-1.5 mr-4">
@@ -141,9 +156,9 @@ export default function Appointments() {
                                 <div className="flex flex-col sm:flex-row gap-8 lg:gap-12">
                                     <div className="space-y-2">
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Date & Time</p>
-                                        <div className="flex items-center gap-4 text-slate-700 font-bold">
-                                            <span className="flex items-center gap-2"><Calendar size={18} className="text-indigo-400" /> {new Date(app.appointmentDate).toLocaleDateString()}</span>
-                                            <span className="flex items-center gap-2"><Clock size={18} className="text-indigo-400" /> {app.appointmentTime.substring(0, 5)} PM</span>
+                                        <div className="flex items-center gap-4 text-slate-700 font-bold text-sm">
+                                            <span className="flex items-center gap-2"><Calendar size={16} className="text-indigo-400" /> {app.appointmentDate}</span>
+                                            <span className="flex items-center gap-2"><Clock size={16} className="text-indigo-400" /> {formatTime12h(app.appointmentTime)}</span>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
@@ -153,17 +168,23 @@ export default function Appointments() {
                                 </div>
 
                                 <div className="flex items-center gap-3">
-                                    {app.status === 'SCHEDULED' && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="text-red-500 border-red-100 hover:bg-red-50 font-bold"
-                                            onClick={() => handleCancelRequest(app.id)}
-                                        >
-                                            <XCircle size={18} className="mr-2" />
-                                            Cancel Appointment
-                                        </Button>
-                                    )}
+                                    {(() => {
+                                        const appointmentDate = new Date(`${app.appointmentDate}T${app.appointmentTime}`);
+                                        const now = new Date();
+                                        const isPast = appointmentDate < now;
+
+                                        return app.status === 'SCHEDULED' && !isPast && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="text-red-500 border-red-100 hover:bg-red-50 font-bold"
+                                                onClick={() => handleCancelRequest(app.id)}
+                                            >
+                                                <XCircle size={18} className="mr-2" />
+                                                Cancel Appointment
+                                            </Button>
+                                        );
+                                    })()}
                                     <Link to={`/appointments/${app.id}`}>
                                         <Button variant="ghost" size="sm" className="font-bold">View Details</Button>
                                     </Link>

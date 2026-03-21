@@ -8,6 +8,7 @@ import { BookingModal } from '../components/BookingModal';
 import { Calendar, Clock, Loader2, Stethoscope, MapPin, Video, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { formatTime12h } from '../utils/dateUtils';
 
 export default function SlotBrowser() {
     const [slots, setSlots] = useState<AppointmentSlotResponse[]>([]);
@@ -16,6 +17,11 @@ export default function SlotBrowser() {
     const [bookingLoading, setBookingLoading] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<AppointmentSlotResponse | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Filter states
+    const [filterType, setFilterType] = useState<string>('ALL');
+    const [filterDate, setFilterDate] = useState<string>('');
+    const [filterName, setFilterName] = useState<string>('');
 
     const navigate = useNavigate();
 
@@ -30,7 +36,12 @@ export default function SlotBrowser() {
                 appointmentApi.getAvailableSlots(),
                 petApi.getAllPets(),
             ]);
-            setSlots(slotsData);
+            const sortedSlots = [...slotsData].sort((a, b) => {
+                const dateA = new Date(`${a.date}T${a.time}`);
+                const dateB = new Date(`${b.date}T${b.time}`);
+                return dateA.getTime() - dateB.getTime();
+            });
+            setSlots(sortedSlots);
             setPets(petsData);
         } catch (err) {
             console.error('Failed to load data', err);
@@ -103,6 +114,23 @@ export default function SlotBrowser() {
         );
     }
 
+    const filteredSlots = slots.filter((slot) => {
+        // Filter out past slots
+        const slotDateTime = new Date(`${slot.date}T${slot.time}`);
+        if (slotDateTime < new Date()) return false;
+
+        // Name filter
+        if (filterName && !slot.veterinarianName.toLowerCase().includes(filterName.toLowerCase())) return false;
+        
+        // Type filter
+        if (filterType !== 'ALL' && slot.consultationType !== filterType) return false;
+        
+        // Date filter
+        if (filterDate && slot.date !== filterDate) return false;
+
+        return true;
+    });
+
     return (
         <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
             <div className="mb-10">
@@ -110,17 +138,70 @@ export default function SlotBrowser() {
                 <p className="mt-2 text-slate-500 font-medium">Choose from our top-rated veterinarians for your pet's needs.</p>
             </div>
 
-            {slots.length === 0 ? (
+            {/* Filters Section */}
+            <div className="mb-8 p-6 bg-white rounded-3xl shadow-sm ring-1 ring-slate-100 flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                    {/* Consultation Type Filter */}
+                    <select
+                        value={filterType}
+                        onChange={(e) => setFilterType(e.target.value)}
+                        className="py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                        <option value="ALL">All Consultation Types</option>
+                        <option value="IN_CLINIC">In-Clinic</option>
+                        <option value="ONLINE">Video Call</option>
+                    </select>
+
+                    {/* Date Filter */}
+                    <input
+                        type="date"
+                        value={filterDate}
+                        onChange={(e) => setFilterDate(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+
+                    {/* Name Filter */}
+                    <input
+                        type="text"
+                        placeholder="Search Veterinarian..."
+                        value={filterName}
+                        onChange={(e) => setFilterName(e.target.value)}
+                        className="py-2.5 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[250px]"
+                    />
+                </div>
+                
+                {/* Clear Filters Button */}
+                {(filterType !== 'ALL' || filterDate || filterName) && (
+                    <Button 
+                        variant="ghost" 
+                        onClick={() => {
+                            setFilterType('ALL');
+                            setFilterDate('');
+                            setFilterName('');
+                        }}
+                        className="text-slate-500 hover:text-slate-700 font-bold ml-auto"
+                    >
+                        Clear Filters
+                    </Button>
+                )}
+            </div>
+
+            {filteredSlots.length === 0 ? (
                 <div className="rounded-3xl bg-amber-50 p-12 text-center border-2 border-dashed border-amber-200">
                     <Info className="mx-auto h-12 w-12 text-amber-500 mb-4" />
-                    <h2 className="text-xl font-bold text-amber-900">No slots available right now</h2>
+                    <h2 className="text-xl font-bold text-amber-900">
+                        {slots.length === 0 ? "No slots available right now" : "No slots match your filters"}
+                    </h2>
                     <p className="mt-2 text-amber-700 max-w-sm mx-auto font-medium italic">
-                        Our specialists are currently fully booked. Please check back later for new availability.
+                        {slots.length === 0 
+                            ? "Our specialists are currently fully booked. Please check back later for new availability."
+                            : "Try adjusting your search criteria or clearing filters to see more options."}
                     </p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {slots.map((slot) => (
+                    {filteredSlots.map((slot) => (
                         <div
                             key={slot.id}
                             className="group relative overflow-hidden rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100 transition-all hover:shadow-xl hover:shadow-indigo-100 hover:-translate-y-1"
@@ -149,10 +230,10 @@ export default function SlotBrowser() {
                                     <Calendar size={18} className="mr-3 text-indigo-400" />
                                     {new Date(slot.date).toLocaleDateString(undefined, { dateStyle: 'medium' })}
                                 </div>
-                                <div className="flex items-center text-slate-600 text-sm font-semibold">
-                                    <Clock size={18} className="mr-3 text-indigo-400" />
-                                    {slot.time.substring(0, 5)} PM ({slot.duration} mins)
-                                </div>
+                                    <div className="flex items-center gap-1">
+                                        <Clock size={14} className="text-indigo-400" />
+                                        <span className="text-slate-600 font-bold text-xs">{formatTime12h(slot.time)}</span>
+                                    </div>
                             </div>
 
                             <div className="mt-8 pt-6 border-t border-slate-50">

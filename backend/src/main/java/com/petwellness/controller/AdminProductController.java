@@ -67,4 +67,12 @@ public class AdminProductController {
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable String id) {
         return ResponseEntity.ok(orderService.getOrderById(id, null, true));
     }
+
+    @PostMapping("/orders/{id}/tracking")
+    public ResponseEntity<OrderResponse> addTrackingEvent(
+            @PathVariable String id,
+            @Valid @RequestBody com.petwellness.dto.request.AddTrackingEventRequest request) {
+        return ResponseEntity.ok(orderService.addTrackingEvent(id, request));
+    }
 }
+

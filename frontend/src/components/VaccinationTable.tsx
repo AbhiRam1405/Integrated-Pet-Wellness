@@ -9,6 +9,7 @@ import { Button } from './Button';
 import VaccinationForm from './VaccinationForm';
 import { Pagination } from './Pagination';
 import toast from 'react-hot-toast';
+import { formatTime12h } from '../utils/dateUtils';
 
 
 interface VaccinationTableProps {
@@ -304,7 +305,7 @@ export default function VaccinationTable({ petId }: VaccinationTableProps) {
                                 <div className="text-right">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Created Date</p>
                                     <p className="text-xs font-bold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg inline-block border border-slate-100">
-                                        {new Date(selectedRecord.createdAt).toLocaleDateString()}
+                                        {new Date(selectedRecord.createdAt).toLocaleDateString()} {formatTime12h(selectedRecord.createdAt)}
                                     </p>
                                 </div>
                             </div>
@@ -439,7 +440,7 @@ export default function VaccinationTable({ petId }: VaccinationTableProps) {
                                                             </p>
                                                         </div>
                                                         <span className="text-[10px] text-slate-400 font-medium">
-                                                            {new Date(rev.revisionTimestamp).toLocaleDateString()}
+                                                            {new Date(rev.revisionTimestamp).toLocaleDateString()} {formatTime12h(rev.revisionTimestamp)}
                                                         </span>
                                                     </div>
                                                     <div className="flex flex-wrap gap-x-4 gap-y-2 opacity-70">
@@ -467,7 +468,7 @@ export default function VaccinationTable({ petId }: VaccinationTableProps) {
                             {selectedRecord.attachmentPath && (
                                 <div className="pt-6 border-t border-slate-100">
                                     <a
-                                        href={`http://localhost:8080/${selectedRecord.attachmentPath}`}
+                                        href={`/${selectedRecord.attachmentPath}`}
                                         target="_blank" rel="noreferrer"
                                         className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
                                     >

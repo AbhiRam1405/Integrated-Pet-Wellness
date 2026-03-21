@@ -10,7 +10,10 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { formatTime12h } from '../utils/dateUtils';
 import { Dialog, Transition } from '@headlessui/react';
+import { TrackingModal } from '../components/TrackingModal';
+
 
 const PRINT_STYLES = `
     @media print {
@@ -85,6 +88,9 @@ export default function OrderHistory() {
     const [selectedOrder, setSelectedOrder] = useState<OrderResponse | null>(null);
     const [activeFilter, setActiveFilter] = useState<string>('ALL');
     const [searchQuery, setSearchQuery] = useState('');
+    const [isTrackingOpen, setIsTrackingOpen] = useState(false);
+    const [trackingOrder, setTrackingOrder] = useState<OrderResponse | null>(null);
+
 
     useEffect(() => {
         loadOrders();
@@ -278,7 +284,7 @@ export default function OrderHistory() {
                                                     {new Date(order.createdAt).toLocaleDateString(undefined, { dateStyle: 'medium' })}
                                                 </p>
                                                 <p className="text-[11px] font-medium text-slate-400">
-                                                    {new Date(order.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                                                    {formatTime12h(order.createdAt)}
                                                 </p>
                                             </td>
                                             <td className="px-8 py-6">
@@ -350,7 +356,7 @@ export default function OrderHistory() {
                                 <Dialog.Panel id="invoice-modal" className="w-full max-w-4xl transform overflow-hidden rounded-[3rem] bg-white text-left align-middle shadow-2xl transition-all ring-1 ring-slate-100">
                                     <style>{PRINT_STYLES}</style>
                                     {selectedOrder && (
-                                        <>
+                                        <Fragment>
                                             {/* Print Header */}
                                             <div className="print-only mb-12 border-b-2 border-slate-900 pb-8 text-center">
                                                 <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase mb-2">PetWellness - Invoice</h1>
@@ -480,19 +486,29 @@ export default function OrderHistory() {
                                                         </table>
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                {/* Quick Actions */}
-                                                <div className="flex flex-wrap items-center justify-between gap-4 pt-4 no-print">
-                                                    <div className="flex items-center gap-3">
-                                                        <Button variant="ghost" className="rounded-2xl gap-2 font-black text-indigo-600 hover:bg-indigo-50">
-                                                            <ArrowUpRight size={18} /> Track Package
+                                            {/* Modal Footer */}
+                                            <div className="border-t border-slate-50 p-8 flex flex-wrap items-center justify-between gap-4 bg-slate-50/10 no-print">
+                                                <div className="flex items-center gap-3">
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="rounded-2xl gap-2 font-black text-indigo-600 hover:bg-indigo-50"
+                                                        onClick={() => {
+                                                            setTrackingOrder(selectedOrder);
+                                                            setIsTrackingOpen(true);
+                                                        }}
+                                                        disabled={selectedOrder.status === OrderStatus.CANCELLED}
+                                                    >
+                                                        <ArrowUpRight size={18} /> Track Package
+                                                    </Button>
+
+                                                    <Link to="/marketplace" onClick={() => setSelectedOrder(null)}>
+                                                        <Button variant="ghost" className="rounded-2xl gap-2 font-black text-slate-500">
+                                                            Buy Again
                                                         </Button>
-                                                        <Link to="/marketplace" onClick={() => setSelectedOrder(null)}>
-                                                            <Button variant="ghost" className="rounded-2xl gap-2 font-black text-slate-500">
-                                                                Buy Again
-                                                            </Button>
-                                                        </Link>
-                                                    </div>
+                                                    </Link>
+
                                                     {selectedOrder.status === OrderStatus.PENDING && (
                                                         <Button
                                                             variant="outline"
@@ -503,25 +519,24 @@ export default function OrderHistory() {
                                                         </Button>
                                                     )}
                                                 </div>
-                                            </div>
 
-                                            {/* Modal Footer */}
-                                            <div className="border-t border-slate-50 p-8 flex justify-end gap-4 bg-slate-50/10 no-print">
-                                                <Button
-                                                    variant="secondary"
-                                                    onClick={() => setSelectedOrder(null)}
-                                                    className="px-10 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-black"
-                                                >
-                                                    Close
-                                                </Button>
-                                                <Button
-                                                    onClick={() => window.print()}
-                                                    className="px-10 rounded-2xl shadow-lg shadow-indigo-100 font-black"
-                                                >
-                                                    Print Invoice
-                                                </Button>
+                                                <div className="flex items-center gap-4">
+                                                    <Button
+                                                        variant="secondary"
+                                                        onClick={() => setSelectedOrder(null)}
+                                                        className="px-10 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-black"
+                                                    >
+                                                        Close
+                                                    </Button>
+                                                    <Button
+                                                        onClick={() => window.print()}
+                                                        className="px-10 rounded-2xl shadow-lg shadow-indigo-100 font-black"
+                                                    >
+                                                        Print Invoice
+                                                    </Button>
+                                                </div>
                                             </div>
-                                        </>
+                                        </Fragment>
                                     )}
                                 </Dialog.Panel>
                             </Transition.Child>
@@ -529,6 +544,12 @@ export default function OrderHistory() {
                     </div>
                 </Dialog>
             </Transition>
+
+            <TrackingModal
+                isOpen={isTrackingOpen}
+                onClose={() => setIsTrackingOpen(false)}
+                order={trackingOrder}
+            />
         </div>
     );
 }

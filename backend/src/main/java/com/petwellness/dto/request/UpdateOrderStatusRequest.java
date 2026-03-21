@@ -18,4 +18,9 @@ public class UpdateOrderStatusRequest {
 
     @NotNull(message = "Status is required")
     private OrderStatus status;
+
+    private String trackingId;
+
+    private String carrier;
 }
+

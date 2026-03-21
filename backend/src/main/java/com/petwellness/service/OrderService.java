@@ -159,7 +159,14 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + order.getUserId()));
 
         order.setStatus(request.getStatus());
+        if (request.getTrackingId() != null) {
+            order.setTrackingId(request.getTrackingId());
+        }
+        if (request.getCarrier() != null) {
+            order.setCarrier(request.getCarrier());
+        }
         Order updatedOrder = orderRepository.save(order);
+
         
         // Send Status Update Email
         try {
@@ -202,6 +209,31 @@ public class OrderService {
     }
 
     /**
+     * Add a tracking event to an order (Admin).
+     */
+    public OrderResponse addTrackingEvent(String id, com.petwellness.dto.request.AddTrackingEventRequest request) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+
+        if (order.getTrackingHistory() == null) {
+            order.setTrackingHistory(new java.util.ArrayList<>());
+        }
+
+        TrackingEvent event = TrackingEvent.builder()
+                .status(request.getStatus())
+                .location(request.getLocation())
+                .message(request.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        order.getTrackingHistory().add(event);
+        Order updatedOrder = orderRepository.save(order);
+
+        return getOrderById(updatedOrder.getId(), order.getUserId(), true);
+    }
+
+
+    /**
      * Get all orders (Admin).
      */
     public List<OrderResponse> getAllOrders() {
@@ -240,8 +272,12 @@ public class OrderService {
                 .phoneNumber(order.getPhoneNumber() != null ? order.getPhoneNumber() : 
                         userRepository.findById(order.getUserId()).map(User::getPhoneNumber).orElse("N/A"))
                 .items(itemResponses)
+                .trackingId(order.getTrackingId())
+                .carrier(order.getCarrier())
+                .trackingHistory(order.getTrackingHistory())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .build();
+
     }
 }

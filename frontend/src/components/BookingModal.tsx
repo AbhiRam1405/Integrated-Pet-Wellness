@@ -7,6 +7,7 @@ import type { AppointmentSlotResponse } from '../types/appointment';
 import type { PetResponse } from '../types/pet';
 import { Dialog, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
+import { formatTime12h } from '../utils/dateUtils';
 
 const bookingSchema = z.object({
     petId: z.string().min(1, 'Please select a pet'),
@@ -84,7 +85,7 @@ export function BookingModal({ isOpen, onClose, slot, pets, onConfirm, loading }
                                     </div>
                                     <div className="flex items-center text-slate-700">
                                         <Clock size={18} className="mr-3 text-indigo-600" />
-                                        <span className="font-bold">{slot.time.substring(0, 5)} PM</span>
+                                        <span className="font-bold">{formatTime12h(slot.time)}</span>
                                     </div>
                                     <div className="flex items-center text-slate-700">
                                         <Stethoscope size={18} className="mr-3 text-indigo-600" />

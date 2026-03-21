@@ -12,9 +12,9 @@ import java.util.List;
 @Repository
 public interface AppointmentRepository extends MongoRepository<Appointment, String> {
     
-    List<Appointment> findByUserId(String userId);
+    List<Appointment> findByUserIdOrderByAppointmentDateDescAppointmentTimeDesc(String userId);
     
-    List<Appointment> findByPetId(String petId);
+    List<Appointment> findByPetIdOrderByAppointmentDateDescAppointmentTimeDesc(String petId);
     
     List<Appointment> findBySlotId(String slotId);
 

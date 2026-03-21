@@ -108,11 +108,11 @@ public class AuthService {
             // Strict checks for Pet Owner
             if (!Boolean.TRUE.equals(user.getIsEmailVerified())) {
                 System.out.println("❌ Login failed for " + user.getUsername() + ": Email not verified");
-                throw new org.springframework.security.access.AccessDeniedException("EMAIL_NOT_VERIFIED: Please verify your email address to continue.");
+                throw new BadRequestException("EMAIL_NOT_VERIFIED: Please verify your email address to continue.");
             }
             if (!Boolean.TRUE.equals(user.getIsApproved())) {
                 System.out.println("❌ Login failed for " + user.getUsername() + ": Account not approved");
-                throw new org.springframework.security.access.AccessDeniedException("APPROVAL_PENDING: Your account is awaiting administrator approval.");
+                throw new BadRequestException("APPROVAL_PENDING: Your account is awaiting administrator approval.");
             }
             // Note: Profile completion is NOT required for login
             // Users can login and complete their profile after authentication

@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Sort;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,6 +42,13 @@ public class AppointmentService {
 
         if (slot.getStatus() != SlotStatus.AVAILABLE) {
             throw new RuntimeException("This slot is no longer available");
+        }
+
+        // Check if slot time has already passed
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+        if (slot.getDate().isBefore(today) || (slot.getDate().equals(today) && slot.getTime().isBefore(now))) {
+            throw new RuntimeException("Cannot book a slot that has already passed");
         }
 
         // 2. Validate Pet Ownership
@@ -86,7 +96,8 @@ public class AppointmentService {
      * Get appointments for the logged-in user.
      */
     public List<AppointmentResponse> getMyAppointments(String userId) {
-        return appointmentRepository.findByUserId(userId).stream()
+        updatePastAppointments();
+        return appointmentRepository.findByUserIdOrderByAppointmentDateDescAppointmentTimeDesc(userId).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -136,9 +147,32 @@ public class AppointmentService {
      * Get all appointments (Admin only).
      */
     public List<AppointmentResponse> getAllAppointments() {
-        return appointmentRepository.findAll().stream()
+        updatePastAppointments();
+        return appointmentRepository.findAll(Sort.by(Sort.Direction.DESC, "appointmentDate", "appointmentTime")).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Finds and updates all past appointments that are still marked as SCHEDULED to COMPLETED.
+     */
+    @Transactional
+    public void updatePastAppointments() {
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        
+        List<Appointment> pastAppointments = appointmentRepository.findAll().stream()
+                .filter(a -> a.getStatus() == AppointmentStatus.SCHEDULED)
+                .filter(a -> a.getAppointmentDate().isBefore(today) || 
+                       (a.getAppointmentDate().equals(today) && a.getAppointmentTime().isBefore(now)))
+                .collect(Collectors.toList());
+
+        if (!pastAppointments.isEmpty()) {
+            pastAppointments.forEach(a -> a.setStatus(AppointmentStatus.COMPLETED));
+            appointmentRepository.saveAll(pastAppointments);
+            System.out.println("✅ Automatically updated " + pastAppointments.size() + " past appointments to COMPLETED.");
+        }
     }
 
     /**

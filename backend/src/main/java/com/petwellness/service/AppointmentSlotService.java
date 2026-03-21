@@ -10,6 +10,8 @@ import com.petwellness.repository.AppointmentSlotRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,6 +78,11 @@ public class AppointmentSlotService {
      */
     public List<AppointmentSlotResponse> getAllSlots() {
         return slotRepository.findAll().stream()
+                .sorted((a, b) -> {
+                    int dateComp = a.getDate().compareTo(b.getDate());
+                    if (dateComp != 0) return dateComp;
+                    return a.getTime().compareTo(b.getTime());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -84,7 +91,17 @@ public class AppointmentSlotService {
      * Get only available slots.
      */
     public List<AppointmentSlotResponse> getAvailableSlots() {
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
         return slotRepository.findByStatus(SlotStatus.AVAILABLE).stream()
+                .filter(slot -> slot.getDate().isAfter(today) || 
+                       (slot.getDate().equals(today) && slot.getTime().isAfter(now)))
+                .sorted((a, b) -> {
+                    int dateComp = a.getDate().compareTo(b.getDate());
+                    if (dateComp != 0) return dateComp;
+                    return a.getTime().compareTo(b.getTime());
+                })
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
