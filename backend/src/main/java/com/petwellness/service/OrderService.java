@@ -85,7 +85,16 @@ public class OrderService {
                 .shippingAddress(request.getShippingAddress())
                 .phoneNumber(request.getPhoneNumber() != null && !request.getPhoneNumber().trim().isEmpty() 
                         ? request.getPhoneNumber() : user.getPhoneNumber())
+                .trackingHistory(new java.util.ArrayList<>())
                 .build();
+
+        // Add initial tracking event
+        order.getTrackingHistory().add(TrackingEvent.builder()
+                .status("ORDER_PLACED")
+                .location("System")
+                .message("Order has been placed and is awaiting processing.")
+                .timestamp(LocalDateTime.now())
+                .build());
 
         Order savedOrder = orderRepository.save(order);
 
@@ -165,6 +174,24 @@ public class OrderService {
         if (request.getCarrier() != null) {
             order.setCarrier(request.getCarrier());
         }
+
+        // Add tracking event for status update
+        if (order.getTrackingHistory() == null) {
+            order.setTrackingHistory(new java.util.ArrayList<>());
+        }
+
+        String message = request.getMessage();
+        if (message == null || message.trim().isEmpty()) {
+            message = getDefaultMessageForStatus(request.getStatus());
+        }
+
+        order.getTrackingHistory().add(TrackingEvent.builder()
+                .status(request.getStatus().name())
+                .location("Warehouse/Transit")
+                .message(message)
+                .timestamp(LocalDateTime.now())
+                .build());
+
         Order updatedOrder = orderRepository.save(order);
 
         
@@ -279,5 +306,16 @@ public class OrderService {
                 .updatedAt(order.getUpdatedAt())
                 .build();
 
+    }
+
+    private String getDefaultMessageForStatus(OrderStatus status) {
+        switch (status) {
+            case PENDING: return "Order has been placed and is awaiting processing.";
+            case PROCESSING: return "Order is being prepared for shipment.";
+            case SHIPPED: return "Order has been handed over to the carrier and is on its way.";
+            case DELIVERED: return "Order has been successfully delivered.";
+            case CANCELLED: return "Order has been cancelled.";
+            default: return "Order status updated to " + status;
+        }
     }
 }

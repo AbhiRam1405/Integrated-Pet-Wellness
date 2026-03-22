@@ -22,5 +22,7 @@ public class UpdateOrderStatusRequest {
     private String trackingId;
 
     private String carrier;
+    
+    private String message;
 }
 
